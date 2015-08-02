@@ -2,7 +2,7 @@ var express = require('express');
 var OSRM = require('../');
 
 var app = express();
-var osrm = new OSRM("berlin-latest.osrm");
+var osrm = new OSRM("./map/map.osrm");
 
 // Accepts a query like:
 // http://localhost:8888?start=52.519930,13.438640&end=52.513191,13.415852
@@ -17,7 +17,7 @@ app.get('/', function(req, res) {
     coordinates.push([+end[0],+end[1]]);
     var query = {
         coordinates: coordinates,
-        alternateRoute: req.query.alternatives !== 'false'
+        alternateRoute: req.query.alternatives === 'true'
     };
     osrm.route(query, function(err, result) {
         if (err) return res.json({"error":err.message});

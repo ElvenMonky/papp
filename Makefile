@@ -30,6 +30,7 @@ clean:
 	rm -rf ./lib/binding/
 	rm -rf ./node_modules/
 	rm -f ./*tgz
+	rm -rf ./map
 	rm -f ./*.osrm*
 	rm -rf ./mason_packages
 	rm -rf ./osrm-backend-*
@@ -48,16 +49,17 @@ rebuild:
 	@make
 
 download:
-	wget http://download.geofabrik.de/europe-150731.osm.pbf -O map.osm.pbf
+	mkdir ./map
+	wget http://download.geofabrik.de/europe-150731.osm.pbf -O ./map/map.osm.pbf
 
-extract: map.osm.pbf
-	./lib/binding/osrm-extract map.osm.pbf -p test/data/car.lua
+extract: ./map/map.osm.pbf
+	./lib/binding/osrm-extract ./map/map.osm.pbf -p test/data/car.lua
 
-prepare: map.osrm
-	./lib/binding/osrm-prepare map.osrm -p test/data/car.lua && \
-    ./lib/binding/osrm-datastore map.osrm
+prepare: ./map/map.osrm
+	./lib/binding/osrm-prepare ./map/map.osrm -p test/data/car.lua && \
+    ./lib/binding/osrm-datastore ./map/map.osrm
 
-test: map.osrm.hsgr
+test: ./map/map.osrm.hsgr
 	./node_modules/.bin/mocha -R spec
 
 .PHONY: test clean build
