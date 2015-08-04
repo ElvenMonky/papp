@@ -57,7 +57,9 @@ extract: ./map/map.osm.pbf
 
 prepare: ./map/map.osrm
 	./lib/binding/osrm-prepare ./map/map.osrm -p test/data/car.lua && \
-    ./lib/binding/osrm-datastore ./map/map.osrm
+
+store: ./map/map.osrm
+	./lib/binding/osrm-datastore ./map/map.osrm
 
 test: ./map/map.osrm.hsgr
 	./node_modules/.bin/mocha -R spec

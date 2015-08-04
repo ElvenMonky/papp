@@ -98,12 +98,13 @@ app.get('/', function(req, res) {
     var indent = +(req.query.indent || 20);
     var query = {
         coordinates: coordinates,
-        alternateRoute: req.query.alternatives === 'true'
+        alternateRoute: req.query.alternatives === 'true',
+	printInstructions: true
     };
     console.log('Querying route');
     osrm.route(query, function(err, result) {
         if (err) return res.json({"error":err.message});
-	//console.log(result);
+	console.log(result);
 	if (result.route_geometry === undefined) return res.json({'error':'No route found'});
 	var route_geometry = decode(result.route_geometry, 6);
 	//console.log(route_geometry);
@@ -119,5 +120,5 @@ app.get('/', function(req, res) {
 });
 
 console.log('Listening on port: ' + 8888);
-app.listen(8888);
+app.listen(8888, '0.0.0.0');
 
