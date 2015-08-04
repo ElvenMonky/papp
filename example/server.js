@@ -10,6 +10,10 @@ var url = 'mongodb://petrolapp:ranok2015@ds039231.mongolab.com:39231/brandstof';
 mongoose.connect(url);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open',function(){
+    var schema = new mongoose.Schema({}, { strict: false });
+    mongoose.model('stations_NL_ex', schema);
+});
 
 var decode = function(encoded, precision) {
     var prec = Math.pow(10, -precision);
@@ -91,6 +95,7 @@ app.get('/', function(req, res) {
     coordinates.push([+start[0],+start[1]]);
     var end = req.query.end.split(',');
     coordinates.push([+end[0],+end[1]]);
+    var indent = +(req.query.indent || 20);
     var query = {
         coordinates: coordinates,
         alternateRoute: req.query.alternatives === 'true'
@@ -102,11 +107,10 @@ app.get('/', function(req, res) {
 	if (result.route_geometry === undefined) return res.json({'error':'No route found'});
 	var route_geometry = decode(result.route_geometry, 6);
 	//console.log(route_geometry);
-	var region = extend(route_geometry, 20);
+	var region = extend(route_geometry, indent);
 	//console.log(region);
-	var schema = new mongoose.Schema({}, { strict: false });
 	console.log('Querying mongodb');
-	mongoose.model('stations_NL_ex', schema).where('loc').within(region).select({'_id':1,'loc':1}).lean().exec(function(err,result){
+	mongoose.model('stations_NL_ex').where('loc').within(region).select({'_id':1,'loc':1}).lean().exec(function(err,result){
 	    if (err) return res.json({"error":err.message});
 	    //console.log(result);
 	    res.json({'crosspoints': route_geometry, 'alongpoints': [], 'petrols': result});
