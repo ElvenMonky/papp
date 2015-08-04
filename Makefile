@@ -56,7 +56,7 @@ extract: ./map/map.osm.pbf
 	./lib/binding/osrm-extract ./map/map.osm.pbf -p test/data/car.lua
 
 prepare: ./map/map.osrm
-	./lib/binding/osrm-prepare ./map/map.osrm -p test/data/car.lua && \
+	./lib/binding/osrm-prepare ./map/map.osrm -p test/data/car.lua
 
 store: ./map/map.osrm
 	./lib/binding/osrm-datastore ./map/map.osrm
