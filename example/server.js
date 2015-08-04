@@ -38,27 +38,45 @@ var decode = function(encoded, precision) {
     return array;
 }
 
+var normalize = function(dist) {
+    var d = Math.sqrt(dist[0]*dist[0]+dist[1]*dist[1]);
+    dist[0] /= d;
+    dist[1] /= d;
+    return dist;
+}
+
+var direction = function(line, i, j) {
+    return normalize([line[i][0] - line[j][0], line[i][1] - line[j][1]]);
+}
+
+var scalar = function(v1, v2) {
+    return v1[0]*v2[0]+v1[1]*v2[1];
+}
+
+var orientation = function(v1, v2) {
+    return v1[1]*v2[0]-v1[0]*v2[1] > 0 ? 1 : -1;
+}
+
+var tangent2 = function(cos) {
+    return (cos == 1 || cos == -1) ? 0 : (1 - cos) / Math.sqrt(1 - cos*cos);
+}
+
 var extend = function(polyline, indent) {
     var m2d = 0.000009;
     var ind = indent * m2d;
-    var n = polyline.length - 1;
-    var coordinates = new Array(4*n+3);
-    var pos = polyline[0];
-    var x = pos[0];
-    var y = pos[1];
-    coordinates[2*n] = [x,y];
-    var dx, dy, d, ox, oy;
-    for (var i = 1; i <= n; ++i) {
-	pos = polyline[i];
-	ox = x; oy = y; x = pos[0]; y = pos[1]; dx = x-ox; dy = y-oy;
-	d = Math.sqrt(dx*dx+dy*dy); dx /= d; dy /= d;
-        coordinates[2*(n+i)-1] = [ox-ind*dy,oy+ind*dx];
-        coordinates[2*(n-i)+1] = [ox+ind*dy,oy-ind*dx];
-        coordinates[2*(n+i)] = [x-ind*dy,y+ind*dx];
-        coordinates[2*(n-i)] = [x+ind*dy,y-ind*dx];
+    var n = polyline.length;
+    var coordinates = new Array(2*n+1);
+    var k, x, p;
+    var d = direction(polyline, 1, 0), od;
+    for (var i = 0; i < n; ++i) {
+	p = polyline[i];
+	od = d; d = ((i == n-1) ? od : direction(polyline, i+1, i));
+	k = orientation(od, d) * tangent2(scalar(od, d));
+	x = [ind*(d[0]*k+d[1]), ind*(d[1]*k-d[0])];
+        coordinates[n+i] = [p[0] + x[0], p[1] + x[1]];
+        coordinates[n-i-1] = [p[0] - x[0], p[1] - x[1]];
     }
-    coordinates[4*n+1] = [x,y];
-    coordinates[4*n+2] = coordinates[0];
+    coordinates[2*n] = coordinates[0];
     return { type: 'Polygon', coordinates: [coordinates] };
 }
 
@@ -81,6 +99,7 @@ app.get('/', function(req, res) {
     osrm.route(query, function(err, result) {
         if (err) return res.json({"error":err.message});
 	//console.log(result);
+	if (result.route_geometry === undefined) return res.json({'error':'No route found'});
 	var route_geometry = decode(result.route_geometry, 6);
 	//console.log(route_geometry);
 	var region = extend(route_geometry, 20);
@@ -90,7 +109,7 @@ app.get('/', function(req, res) {
 	mongoose.model('stations_NL_ex', schema).where('loc').within(region).select({'_id':1,'loc':1}).lean().exec(function(err,result){
 	    if (err) return res.json({"error":err.message});
 	    //console.log(result);
-	    res.json(result);
+	    res.json({'crosspoints': route_geometry, 'alongpoints': [], 'petrols': result});
 	});
     });
 });
