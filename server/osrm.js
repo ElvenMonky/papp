@@ -12,7 +12,7 @@ module.exports.process = function(req, res) {
     var start = req.query.start.split(',');
     var end = req.query.end.split(',');
     var indent = +(req.query.indent || 100);
-    var fuel = req.query.fuel || 'Euro 95';
+    var fuel = req.query.fuel || 'Super 95';
     var coordinates = [[+start[0],+start[1]], [+end[0],+end[1]]];
     var query = {
         coordinates: coordinates,

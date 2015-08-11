@@ -11,7 +11,7 @@ module.exports.init = function() {
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', function(){
 	var schema = new Schema({}, { strict: false });
-	Model = mongoose.model('stations', schema, 'stations_NL_ex');
+	Model = mongoose.model('stations', schema, 'stations');
 	console.log('Mongo database connected at: ' + (Date.now() - started) + " ms");
     });
 }
