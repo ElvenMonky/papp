@@ -20,10 +20,12 @@ module.exports.process = function(req, res) {
 	printInstructions: true
     };
     console.log("Querying route");
+    var started = Date.now();
     osrm.route(query, function(err, result) {
+	console.log("Queried at: " + (Date.now() - started) + " ms");
 	if (err) return res.json({"error": err.message});
-	console.log(result.route_instructions);
-	if (result.route_geometry === undefined) return res.json({"error": "No route found"});
+	if (result.route_geometry === undefined || result.route_instructions === undefined)
+	    return res.json({"error": "No route found"});
 	geometry.process(res, result, {indent: indent, fuel: fuel});
     });
 }

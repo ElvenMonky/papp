@@ -64,4 +64,8 @@ store: ./map/map.osrm
 test: ./map/map.osrm.hsgr
 	./node_modules/.bin/mocha -R spec
 
+install:
+	sed -i -e "s@<petrolapp-directory>@${PWD}@g" ./node-osrm-petrolapp.conf
+	sudo cp node-osrm-petrolapp.conf /etc/init
+
 .PHONY: test clean build
