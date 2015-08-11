@@ -1,5 +1,6 @@
 var OSRM = require('../');
 var assert = require('assert');
+var map = "./map/map.osrm";
 
 it('constructor: throws if new keyword is not used', function(done) {
     assert.throws(function() { OSRM(); },
@@ -14,7 +15,7 @@ it('constructor: throws if necessary files do not exist', function(done) {
 });
 
 it('constructor: takes a distance table length argument', function(done) {
-    var osrm = new OSRM({path: "berlin-latest.osrm", distance_table: 30000});
+    var osrm = new OSRM({path: map, distance_table: 30000});
     osrm.route({coordinates: [[52.519930,13.438640], [52.513191,13.415852]]}, function(err, route) {
         assert.ifError(err);
         done();
@@ -22,7 +23,7 @@ it('constructor: takes a distance table length argument', function(done) {
 });
 
 it('constructor: takes a shared memory argument', function(done) {
-    var osrm = new OSRM({path: "berlin-latest.osrm", shared_memory: false});
+    var osrm = new OSRM({path: map, shared_memory: false});
     osrm.route({coordinates: [[52.519930,13.438640], [52.513191,13.415852]]}, function(err, route) {
         assert.ifError(err);
         done();
@@ -35,12 +36,12 @@ it('constructor: throws if shared_memory==false with no path defined', function(
 });
 
 it('constructor: throws if given a non-bool shared_memory option', function() {
-    assert.throws(function() { var osrm = new OSRM({path: "berlin-latest.osrm", shared_memory: "a"}); },
+    assert.throws(function() { var osrm = new OSRM({path: map, shared_memory: "a"}); },
         /shared_memory option must be a boolean/);
 });
 
 it('constructor: throws if given a non-uint distance_table option', function() {
-    assert.throws(function() { var osrm = new OSRM({path: "berlin-latest.osrm", distance_table: -4}); },
+    assert.throws(function() { var osrm = new OSRM({path: map, distance_table: -4}); },
         /the maximum number of locations in the distance table must be an unsigned integer/);
 });
 
@@ -50,7 +51,7 @@ it('constructor: throws if given a non-string/obj argument', function() {
 });
 
 it('route: routes Berlin', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     osrm.route({coordinates: [[52.519930,13.438640], [52.513191,13.415852]]}, function(err, route) {
         assert.ifError(err);
         assert.equal(route.status_message, 'Found route between points');
@@ -59,7 +60,7 @@ it('route: routes Berlin', function(done) {
 });
 
 it('route: throws with too few or invalid args', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     assert.throws(function() { osrm.route({coordinates: [[52.519930,13.438640], [52.513191,13.415852]]}) },
         /two arguments required/);
     assert.throws(function() { osrm.route(null, function(err, route) {}) },
@@ -68,7 +69,7 @@ it('route: throws with too few or invalid args', function(done) {
 });
 
 it('route: throws with bad params', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     assert.throws(function () { osrm.route({coordinates: []}, function(err) {}) });
     assert.throws(function() { osrm.route({}, function(err, route) {}) },
         /must provide a coordinates property/);
@@ -92,7 +93,7 @@ it('route: throws with bad params', function(done) {
 });
 
 it('route: takes jsonp parameter', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     osrm.route({coordinates: [[52.519930,13.438640], [52.513191,13.415852]], jsonpParameter: 'function'}, function(err, route) {
         assert.ifError(err);
         assert.equal(route.status_message, 'Found route between points');
@@ -115,7 +116,7 @@ if (process.platform === 'darwin') {
 }
 
 it('route: routes Berlin with options', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: [[52.519930,13.438640], [52.513191,13.415852]],
         zoomLevel: 17,
@@ -134,7 +135,7 @@ it('route: routes Berlin with options', function(done) {
 });
 
 it('route: routes Berlin with hints', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: [[52.519930,13.438640], [52.513191,13.415852]],
         alternateRoute: false,
@@ -158,7 +159,7 @@ it('route: routes Berlin with hints', function(done) {
 });
 
 it('route: routes Berlin with null hints', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: [[52.519930,13.438640], [52.513191,13.415852]],
         alternateRoute: false,
@@ -172,7 +173,7 @@ it('route: routes Berlin with null hints', function(done) {
 });
 
 it('table: distance table in Berlin', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: [[52.519930,13.438640], [52.513191,13.415852]]
     };
@@ -200,7 +201,7 @@ it('table: distance table in Berlin', function(done) {
 });
 
 it('table: throws on invalid arguments', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {};
     assert.throws(function() { osrm.table(options); },
         /two arguments required/);
@@ -220,14 +221,14 @@ it('table: throws on invalid arguments', function(done) {
 });
 
 it('table: throws on invalid arguments', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     assert.throws(function() { osrm.table(null, function() {}); },
         /first arg must be an object/);
     done();
 });
 
 it('match: match in Berlin', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: [[52.542648,13.393252], [52.543079,13.394780], [52.542107,13.397389]],
         timestamps: [1424684612, 1424684616, 1424684620]
@@ -240,7 +241,7 @@ it('match: match in Berlin', function(done) {
 });
 
 it('match: match in Berlin without timestamps', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: [[52.542648,13.393252], [52.543079,13.394780], [52.542107,13.397389]]
     };
@@ -252,7 +253,7 @@ it('match: match in Berlin without timestamps', function(done) {
 });
 
 it('match: match in Berlin with all options', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: [[52.542648,13.393252], [52.543079,13.394780], [52.542107,13.397389]],
         timestamps: [1424684612, 1424684616, 1424684620],
@@ -269,21 +270,21 @@ it('match: match in Berlin with all options', function(done) {
 });
 
 it('match: throws on missing arguments', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     assert.throws(function() { osrm.match({}) },
         /two arguments required/);
     done();
 });
 
 it('match: throws on non-object arg', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     assert.throws(function() { osrm.match(null, function(err, response) {}) },
         /first arg must be an object/);
     done();
 });
 
 it('match: throws on invalid coordinates param', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: ''
     }
@@ -302,7 +303,7 @@ it('match: throws on invalid coordinates param', function(done) {
 });
 
 it('match: throws on invalid timestamps param', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {
         coordinates: [[52.542648,13.393252], [52.543079,13.394780], [52.542107,13.397389]],
         timestamps: "timestamps"
@@ -319,7 +320,7 @@ it('match: throws on invalid timestamps param', function(done) {
 });
 
 it('nearest', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     osrm.nearest([52.4224, 13.333086], function(err, result) {
         assert.ifError(err);
         assert.equal(result.status, 0);
@@ -330,7 +331,7 @@ it('nearest', function(done) {
 });
 
 it('nearest: throws on invalid args', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     var options = {};
     assert.throws(function() { osrm.nearest(options); },
         /two arguments required/);
@@ -343,7 +344,7 @@ it('nearest: throws on invalid args', function(done) {
 });
 
 it('locate', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     osrm.locate([52.4224, 13.333086], function(err, result) {
         assert.ifError(err);
         assert.equal(result.status, 0);
@@ -353,14 +354,14 @@ it('locate', function(done) {
 });
 
 it('locate: throws on incorrect number of args', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     assert.throws(function() { osrm.locate([52.4224, 13.333086]) },
         /two arguments required/);
     done();
 });
 
 it('locate: throws on invalid coordinate arg', function(done) {
-    var osrm = new OSRM("berlin-latest.osrm");
+    var osrm = new OSRM(map);
     assert.throws(function() { osrm.locate(52.4224, function(err, result) {}) },
         /first argument must be an array of lat, long/);
     assert.throws(function() { osrm.locate([52.4224], function(err, result) {}) },
