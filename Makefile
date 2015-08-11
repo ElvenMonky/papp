@@ -50,7 +50,7 @@ rebuild:
 
 download:
 	mkdir ./map
-	wget http://download.geofabrik.de/europe-150731.osm.pbf -O ./map/map.osm.pbf
+	wget http://download.geofabrik.de/europe-latest.osm.pbf -O ./map/map.osm.pbf
 
 extract: ./map/map.osm.pbf
 	./lib/binding/osrm-extract ./map/map.osm.pbf -p test/data/car.lua
