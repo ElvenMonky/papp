@@ -138,5 +138,5 @@ module.exports.process = function(res, result, query) {
     var result = queryjsts(regions);
     console.log("Queried at: " + (Date.now() - started) + " ms");
     //console.log(JSON.stringify(result));
-    petrols.process(res, result, {crosspoints: crosspoints, alongpoints: alongpoints, boundary: result, fuel: query.fuel});
+    petrols.process(res, result, {crosspoints: crosspoints, alongpoints: alongpoints, /*boundary: result,*/ fuel: query.fuel});
 }
