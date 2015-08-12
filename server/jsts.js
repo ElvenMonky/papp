@@ -46,4 +46,7 @@ module.exports.snap = function(alongpoints, petrols) {
 	petrols[i].dist = 1000 * (dist[nearest.segIndex] + p1.distanceTo(p2));
 	petrols[i].snapped = {'type': 'Point', 'coordinates': [nearest.pt.x, nearest.pt.y]};
     }
+    var sorted = petrols.sort(function(a, b) { return a.dist - b.dist; });
+    for (var i = n-1; i > 0; --i) sorted[i].dist -= sorted[i-1].dist;
+    return sorted;
 }

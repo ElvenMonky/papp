@@ -40,8 +40,8 @@ module.exports.process = function(res, region, query) {
 	console.log("Total petrols found: " + result.length);
 	console.log("Getting and snapping petrols with appropriate fuel");
 	started = Date.now();
-	query.petrols = getPetrols(result, query.fuel);
-	jsts.snap(query.alongpoints, query.petrols);
+	var petrols = getPetrols(result, query.fuel);
+	query.petrols = jsts.snap(query.alongpoints, petrols);
 	console.log("Petrols found: " + query.petrols.length + " at: " +(Date.now() - started) + " ms");
 	delete query.fuel;
 	res.json(query);
