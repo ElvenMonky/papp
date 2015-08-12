@@ -30,6 +30,9 @@ var getPetrols = function(result, fuel) {
     return petrols;
 }
 
+var snapPetrols = function(petrols, polyline) {
+}
+
 module.exports.process = function(res, region, query) {
     console.log("Querying mongodb")
     var started = Date.now();
@@ -40,6 +43,7 @@ module.exports.process = function(res, region, query) {
 	console.log("Getting petrols with appropriate fuel");
 	started = Date.now();
 	query.petrols = getPetrols(result, query.fuel);
+	snapPetrols(query.petrols, query.alongpoints);
 	console.log("Petrols found: " + query.petrols.length + " at: " +(Date.now() - started) + " ms");
 	delete query.fuel;
 	res.json(query);
