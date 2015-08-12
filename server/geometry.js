@@ -1,7 +1,5 @@
 var petrols = require('./petrols');
-var jsts = require('jsts');
-var parser = new jsts.io.GeoJSONParser();
-var writer = new jsts.io.GeoJSONWriter();
+var jsts = require('./jsts');
 
 var decode = function(encoded, precision) {
     var prec = Math.pow(10, -precision);
@@ -38,14 +36,6 @@ var getCrossPoints = function(inst, geometry) {
     return result;
 }
 
-var jstsbuffer = function(route, indent) {
-    var m2d = 0.000009;
-    var ind = indent * m2d;
-    var parsed = parser.read(route);
-    var polygon = parsed.buffer(ind, 4, jsts.operation.buffer.BufferOp.CAP_SQUARE);
-    return writer.write(polygon);
-}
-
 module.exports.process = function(res, result, query) {
     console.log("Decode route geomerty")
     var started = Date.now();
@@ -56,7 +46,7 @@ module.exports.process = function(res, result, query) {
     var crosspoints = getCrossPoints(result.route_instructions, route_geometry);
     console.log('Querying jsts buffer');
     started = Date.now();
-    var result = jstsbuffer(alongpoints, query.indent);
+    var result = jsts.buffer(alongpoints, query.indent);
     console.log("Queried at: " + (Date.now() - started) + " ms");
     console.log("Boundary region has " + result.coordinates[0].length + " edges");
     //console.log(JSON.stringify(result));

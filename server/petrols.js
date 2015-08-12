@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var jsts = require('./jsts');
 var Schema = mongoose.Schema;
 var Model;
 
@@ -30,9 +31,6 @@ var getPetrols = function(result, fuel) {
     return petrols;
 }
 
-var snapPetrols = function(petrols, polyline) {
-}
-
 module.exports.process = function(res, region, query) {
     console.log("Querying mongodb")
     var started = Date.now();
@@ -40,10 +38,10 @@ module.exports.process = function(res, region, query) {
 	console.log("Queried at: " +(Date.now() - started) + " ms");
 	if (err) return res.json({"error": err.message});
 	console.log("Total petrols found: " + result.length);
-	console.log("Getting petrols with appropriate fuel");
+	console.log("Getting and snapping petrols with appropriate fuel");
 	started = Date.now();
 	query.petrols = getPetrols(result, query.fuel);
-	snapPetrols(query.petrols, query.alongpoints);
+	jsts.snap(query.alongpoints, query.petrols);
 	console.log("Petrols found: " + query.petrols.length + " at: " +(Date.now() - started) + " ms");
 	delete query.fuel;
 	res.json(query);
