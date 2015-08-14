@@ -1,6 +1,7 @@
 var jsts = require('jsts');
 var GeoPoint = require('geopoint');
 var parser = new jsts.io.GeoJSONParser();
+//var utils = require('./utils');
 
 module.exports.buffer = function(alongpoints, indent) {
     var route = parser.read(alongpoints);
@@ -20,7 +21,7 @@ var getDists = function(alongpoints) {
 	a = alongpoints.coordinates[i];
 	op = p; p = new GeoPoint(a[1], a[0]);
 	dist[i] = dist[i-1] + p.distanceTo(op, true);
-	//console.log(dist[i]);
+	//utils.log(dist[i]);
     }
     return dist;
 }
@@ -28,18 +29,16 @@ var getDists = function(alongpoints) {
 module.exports.snap = function(alongpoints, petrols) {
     var dist = getDists(alongpoints);
     var route = parser.read(alongpoints);
-    var op;// = new jsts.operation.distance.DistanceOp(route, undefined, 0.0);
+    var op;
     var n = petrols.length;
     var a, nearest, point, p1, p2;
     for (var i = 0; i < n; ++i) {
 	point = parser.read(petrols[i].loc);
-	//console.log(point);
+	//utils.log(point);
 	op = new jsts.operation.distance.DistanceOp(route, point, 0.0);
-	//op.geom[1] = point;
 	nearest = op.nearestLocations()[0];
-	//op.minDistanceLocation = null;
-	//console.log(nearest.segIndex);
-	//console.log(nearest.pt);
+	//utils.log(nearest.segIndex);
+	//utils.log(nearest.pt);
 	a = alongpoints.coordinates[nearest.segIndex];
 	p1 = new GeoPoint(a[1], a[0]);
 	p2 = new GeoPoint(nearest.pt.y, nearest.pt.x);
