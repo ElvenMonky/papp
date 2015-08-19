@@ -20,7 +20,7 @@ var viaroute = function(req, res, query, web) {
         var noroute = result.route_geometry === undefined || result.route_instructions === undefined;
         if (!web && noroute)
             return utils.error(res, 'No route found');
-        if (web && (!query.printInstructions || noroute))
+        if (web && (!query.geometry || !query.printInstructions || noroute))
             return res.jsonp(result);
         geometry.process(res, result, params);
     });
@@ -55,6 +55,7 @@ module.exports = {
         var query = {
             coordinates: coords,
             alternateRoute: req.query.alt === 'true',
+            geometry: req.query.geometry !== 'false',
             printInstructions: req.query.instructions === 'true',
             zoomLevel: +req.query.z,
             jsonpParameter: req.query.jsonp
