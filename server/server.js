@@ -13,6 +13,8 @@ app.get('/', osrm.process);
 app.use('/web', express.static('osrm-frontend-petrolapp/WebContent'));
 app.get('/timestamp', osrm.timestamp);
 app.get('/viaroute', osrm.viaroute);
+app.get('/petrols', petrols.petrols);
+app.get('/near', petrols.near);
 
 utils.log('Listening on port: ' + 8888);
 var server = app.listen(8888, '0.0.0.0');

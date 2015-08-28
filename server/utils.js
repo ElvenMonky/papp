@@ -12,7 +12,7 @@ module.exports = {
     },
 
     finish: function(message, started) {
-        console.log(message + " at: " + (Date.now() - started) + " ms");
+        console.log(message + " in " + (Date.now() - started) + " ms");
     },
 
     log: function(message) {

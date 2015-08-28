@@ -54,3 +54,31 @@ module.exports.process = function(res, region, route, query) {
         }
     });
 }
+
+module.exports.petrols = function(req, res) {
+    var started = utils.start('Querying mongodb');
+    var query = {};
+    if (req.query._id !== undefined) query._id = req.query._id;
+    Model.find(query).select('loc').lean().exec(function(err, result){
+        utils.finish('Queried', started);
+        if (err) return utils.error(res, err.message);
+        utils.log('Total petrols found: ' + result.length);
+        return res.jsonp(result);
+    });
+}
+
+module.exports.near = function(req, res) {
+    var started = utils.start('Querying mongodb');
+    var s = req.query.loc.split(',');
+    var point = {type: "Point", coordinates: [+s[1],+s[0]]};
+    var options = {maxDistance: +req.query.distance, spherical: true};
+    //var m2d = 0.000000157;
+    //var shape = {center: [+s[0],+s[1]], radius: +req.query.distance, spherical: true};
+    Model.geoNear(point, options, function(err, result){
+    //Model.where('loc').within().circle(shape).select('loc').lean().exec(function(err, result){
+        utils.finish('Queried', started);
+        if (err) return utils.error(res, err.message);
+        utils.log('Total petrols found: ' + result.length);
+        return res.jsonp(result);
+    });
+}
