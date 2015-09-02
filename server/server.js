@@ -13,6 +13,7 @@ app.get('/', osrm.process);
 app.use('/web', express.static('osrm-frontend-petrolapp/WebContent'));
 app.get('/timestamp', osrm.timestamp);
 app.get('/viaroute', osrm.viaroute);
+app.get('/tablenear', osrm.tablenear);
 app.get('/petrols', petrols.petrols);
 app.get('/near', petrols.near);
 

@@ -68,10 +68,16 @@ module.exports.petrols = function(req, res) {
 }
 
 module.exports.near = function(req, res) {
+    module.exports.geoNear(req, res, function(result) {
+        return res.jsonp(result);
+    });
+}
+
+module.exports.geoNear = function(req, res, callback) {
     var started = utils.start('Querying mongodb');
     var s = req.query.loc.split(',');
     var point = {type: "Point", coordinates: [+s[1],+s[0]]};
-    var options = {maxDistance: +req.query.distance, spherical: true};
+    var options = {maxDistance: +req.query.distance, spherical: true, lean: true, limit: 2147483647};
     //var m2d = 0.000000157;
     //var shape = {center: [+s[0],+s[1]], radius: +req.query.distance, spherical: true};
     Model.geoNear(point, options, function(err, result){
@@ -79,6 +85,6 @@ module.exports.near = function(req, res) {
         utils.finish('Queried', started);
         if (err) return utils.error(res, err.message);
         utils.log('Total petrols found: ' + result.length);
-        return res.jsonp(result);
+        callback(result);
     });
 }
