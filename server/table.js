@@ -68,10 +68,9 @@ module.exports = {
             writefile(res, filename, petrols, function() {
                 var m = Math.min(req.query.partsize || n, n);
                 var parts = Math.max(2, Math.ceil(n / m));
-                var global_started = utils.start('Making table queries');
                 counter = {
                     res: res,
-                    started: Date.now(),
+                    started: utils.start('Making table queries'),
                     finished: Date.now(),
                     n: Math.floor(parts * (parts - 1) / 2),
                     queue: [],
@@ -81,7 +80,8 @@ module.exports = {
                         if (item)
                             return querytablepartial(counter, petrols, item);
                         if (counter.filenames.length > counter.n) {
-                            utils.finish('Complete', global_started);
+                            utils.finish('Complete', counter.started);
+                            counter.finished = Date.now();
                             filename = path+'/distance_table.zip';
                             if (fs.existsSync(filename))
                                 fs.unlinkSync(filename);
@@ -89,7 +89,6 @@ module.exports = {
                             var started = utils.start('Archiving data');
                             mytask.add(filename, counter.filenames/*, {m: 'm=LZMA'}*/).then(function() {
                                 utils.finish('Complete', started);
-                                counter.finished = Date.now();
                             }).catch(function(err) {
                                 utils.error(res, err);
                             });

@@ -3,7 +3,7 @@ var geometry = require('./geometry');
 var utils = require('./utils');
 
 var started = utils.start('Loading map');
-var osrm = new OSRM({path: './map/map.osrm', distance_table:10000/*, shared: true*/});
+var osrm = new OSRM({/*path: './map/map.osrm', */distance_table:10000, shared: true});
 utils.finish('Loading complete', started);
 
 var viaroute = function(req, res, query, web) {
