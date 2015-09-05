@@ -60,7 +60,8 @@ module.exports = {
             if (n < 2) return utils.error(res, 'only '+n+' petrols found');
             var petrols = new Array(n);
             for (var i=0; i < n; ++i) {
-                petrols[i] = { 'id': result[i].obj._id, 'loc': result[i].obj.loc};
+                var obj = result[i].obj || result[i];
+                petrols[i] = { 'id': obj._id, 'loc': obj.loc};
             }
             if (!fs.existsSync(path))
                 fs.mkdirSync(path);
