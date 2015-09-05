@@ -53,7 +53,7 @@ var querytable = function(coords, label, filename, counter) {
 }
 
 module.exports = {
-    queryPetrolsTable: function(req, res) {
+    query: function(req, res) {
         var method = req.query.loc ? petrols.geoNear : petrols.allPetrols;
         method(req, res, function(result) {
             var n = result.length;
@@ -82,16 +82,6 @@ module.exports = {
                         if (counter.filenames.length > counter.n) {
                             utils.finish('Complete', counter.started);
                             counter.finished = Date.now();
-                            filename = path+'/distance_table.zip';
-                            if (fs.existsSync(filename))
-                                fs.unlinkSync(filename);
-                            var mytask = new zip();
-                            var started = utils.start('Archiving data');
-                            mytask.add(filename, counter.filenames/*, {m: 'm=LZMA'}*/).then(function() {
-                                utils.finish('Complete', started);
-                            }).catch(function(err) {
-                                utils.error(res, err);
-                            });
                         }
                     }
                 };
@@ -112,16 +102,30 @@ module.exports = {
         });
     },
 
-    getPetrolsTableStatus: function(req, res) {
+    status: function(req, res) {
         var i = counter.filenames.length - 1;
         var finished = i < counter.n ? Date.now() : counter.finished;
         res.jsonp({'Progress': ''+i+'/'+counter.n, 'Duration': finished - counter.started });
     },
 
-    getPetrolsTable: function(req, res) {
-        filename = path+'/distance_table.zip';
+    pack: function(req, res) {
+        filename = '/tmp/distance_table.zip';
         if (fs.existsSync(filename))
-            return res.download(filename, filename);
+            fs.unlinkSync(filename);
+        var mytask = new zip();
+        var started = utils.start('Archiving data');
+        mytask.add(filename, counter.filenames/*, {m: 'm=LZMA'}*/).then(function() {
+            utils.finish('Complete', started);
+        }).catch(function(err) {
+            utils.error(res, err);
+        });
+        res.jsonp('Archiving started');
+    },
+
+    get: function(req, res) {
+        filename = '/tmp/distance_table.zip';
+        if (fs.existsSync(filename))
+            return res.sendFile(filename);
         else utils.error(filename+' does not exist');
     }
 }

@@ -55,7 +55,7 @@ module.exports.process = function(res, region, route, query) {
     });
 }
 
-module.exports.petrols = function(req, res) {
+module.exports.get = function(req, res) {
     module.exports.allPetrols(req, res, function(result) {
         return res.jsonp(result);
     });

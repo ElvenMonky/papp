@@ -14,11 +14,12 @@ app.get('/', osrm.process);
 app.use('/web', express.static('osrm-frontend-petrolapp/WebContent'));
 app.get('/timestamp', osrm.timestamp);
 app.get('/viaroute', osrm.viaroute);
-app.get('/querypetrolstable', table.queryPetrolsTable);
-app.get('/getpetrolstablestatus', table.getPetrolsTableStatus);
-app.get('/getpetrolstable', table.getPetrolsTable);
-app.get('/petrols', petrols.petrols);
-app.get('/near', petrols.near);
+app.get('/table/query', table.query);
+app.get('/table/status', table.status);
+app.get('/table/pack', table.pack);
+app.get('/table/get', table.get);
+app.get('/petrols/get', petrols.get);
+app.get('/petrols/near', petrols.near);
 
 utils.log('Listening on port: ' + 8888);
 var server = app.listen(8888, '0.0.0.0');
