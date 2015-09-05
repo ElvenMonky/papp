@@ -1,5 +1,6 @@
 var express = require('express');
 var osrm = require('./osrm');
+var table = require('./table');
 var petrols = require('./petrols');
 var utils = require('./utils');
 
@@ -13,7 +14,9 @@ app.get('/', osrm.process);
 app.use('/web', express.static('osrm-frontend-petrolapp/WebContent'));
 app.get('/timestamp', osrm.timestamp);
 app.get('/viaroute', osrm.viaroute);
-app.get('/tablenear', osrm.tablenear);
+app.get('/querypetrolstable', table.queryPetrolsTable);
+app.get('/getpetrolstablestatus', table.getPetrolsTableStatus);
+app.get('/getpetrolstable', table.getPetrolsTable);
 app.get('/petrols', petrols.petrols);
 app.get('/near', petrols.near);
 

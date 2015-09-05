@@ -1,3 +1,4 @@
+var loaded = Date.now();
 module.exports = {
     error: function(res, message) {
         if (res)
@@ -7,15 +8,15 @@ module.exports = {
     },
 
     start: function(message) {
-        console.log(message);
+        module.exports.log(message);
         return Date.now();
     },
 
     finish: function(message, started) {
-        console.log(message + " in " + (Date.now() - started) + " ms");
+        module.exports.log(message + " in " + (Date.now() - started) + " ms");
     },
 
     log: function(message) {
-        console.log(message);
+        console.log((Date.now() - loaded) + ": " + message);
     }
 }

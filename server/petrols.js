@@ -56,6 +56,12 @@ module.exports.process = function(res, region, route, query) {
 }
 
 module.exports.petrols = function(req, res) {
+    module.exports.allPetrols(req, res, function(result) {
+        return res.jsonp(result);
+    });
+}
+
+module.exports.allPetrols = function(req, res, callback) {
     var started = utils.start('Querying mongodb');
     var query = {};
     if (req.query._id !== undefined) query._id = req.query._id;
@@ -63,7 +69,7 @@ module.exports.petrols = function(req, res) {
         utils.finish('Queried', started);
         if (err) return utils.error(res, err.message);
         utils.log('Total petrols found: ' + result.length);
-        return res.jsonp(result);
+        callback(result);
     });
 }
 
@@ -77,7 +83,7 @@ module.exports.geoNear = function(req, res, callback) {
     var started = utils.start('Querying mongodb');
     var s = req.query.loc.split(',');
     var point = {type: "Point", coordinates: [+s[1],+s[0]]};
-    var options = {maxDistance: +req.query.distance, spherical: true, lean: true, limit: 2147483647};
+    var options = {maxDistance: +(req.query.distance || 10000), spherical: true, lean: true, limit: +(req.query.limit || 10000)};
     //var m2d = 0.000000157;
     //var shape = {center: [+s[0],+s[1]], radius: +req.query.distance, spherical: true};
     Model.geoNear(point, options, function(err, result){

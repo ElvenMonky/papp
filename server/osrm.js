@@ -1,11 +1,9 @@
 var OSRM = require('../');
 var geometry = require('./geometry');
 var utils = require('./utils');
-var petrols = require('./petrols');
-var fs = require('fs');
 
 var started = utils.start('Loading map');
-var osrm = new OSRM({path: './map/map.osrm', distance_table:100000});
+var osrm = new OSRM({path: './map/map.osrm', distance_table:10000/*, shared: true*/});
 utils.finish('Loading complete', started);
 
 var viaroute = function(req, res, query, web) {
@@ -69,32 +67,15 @@ module.exports = {
         res.jsonp({"timestamp": "n/a", "status": 0});
     },
 
-    tablenear: function(req, res) {
-        petrols.geoNear(req, res, function(result) {
-            var n = result.length;
-            if (n < 2) return utils.error(res, 'only '+n+' petrols found');
-            var petrols = new Array(n);
-            var coords = new Array(n);
-            for (var i=0; i < n; ++i) {
-                var s = result[i].obj.loc.coordinates;
-                coords[i] = [+s[1], +s[0]];
-                petrols[i] = { 'id': result[i].obj._id, 'loc': result[i].obj.loc};
-            }
-            //utils.log(coords);
-            var params = {
-                coordinates: coords
-            };
-            var started = utils.start('Querying distance table');
-            osrm.table(params, function(err, result) {
-                utils.finish('Queried', started);
-                //utils.log(result);
-                if (err) return utils.error(res, err.message);
-                var filename = '/tmp/distance_table.json';
-                fs.writeFile(filename, JSON.stringify({petrols: petrols, distance_table: result.distance_table}), function(err) {
-                    if (err) return utils.error(res, err.message);
-                    return res.download(filename, filename);
-                });
-            });
+    table: function(coords, label, callback) {
+        //utils.log(coords);
+        var params = {coordinates: coords};
+        var started = utils.start('Querying distance table '+label);
+        osrm.table(params, function(err, result) {
+            utils.finish('Queried '+label, started);
+            //utils.log(result);
+            if (err) return utils.error(res, err.message);
+            callback(result);
         });
     }
 }
