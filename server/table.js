@@ -115,7 +115,7 @@ module.exports = {
 
     getPetrolsTableStatus: function(req, res) {
         var i = counter.filenames.length - 1;
-        var finished = i < n ? Date.now() : counter.finished;
+        var finished = i < counter.n ? Date.now() : counter.finished;
         res.jsonp({'Progress': ''+i+'/'+counter.n, 'Duration': finished - counter.started });
     },
 
