@@ -45,11 +45,24 @@ var querytablepartial = function(counter, petrols, item) {
 
 var querytable = function(coords, label, filename, counter) {
     osrm.table(coords, label, function(result) {
-        writefile(counter.res, filename, result.distance_table, function() {
+        data = packtable(result.distance_table);
+        writefile(counter.res, filename, data, function() {
             counter.filenames.push(filename);
             counter.callback(counter.queue.pop());
         });
     });
+}
+
+var packtable = function(table) {
+    var n = table.length;
+    var m = table[0].length;
+    var value = 0;
+    for (var i=0; i<n; ++i) {
+        for (var j=0; j<m; ++j) {
+            if (table[i][j] == 2147483647) table[i][j] = 0;
+        }
+    }
+    return table;
 }
 
 module.exports = {
