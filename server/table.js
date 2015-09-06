@@ -28,7 +28,7 @@ var packfile = function(res, filename, callback) {
     var archivename = filename.replace('.json','.zip');
     if (fs.existsSync(archivename))
         fs.unlinkSync(archivename);
-    mytask.add(archivename, filename, {m: 'z=7'}).then(function() {
+    mytask.add(archivename, filename, {m: 'x=7'}).then(function() {
         utils.finish('Archived '+filename, started);
         fs.unlinkSync(filename);
         callback();
