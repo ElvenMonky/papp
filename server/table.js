@@ -28,7 +28,7 @@ var packfile = function(res, filename, callback) {
     var archivename = filename.replace('.json','.zip');
     if (fs.existsSync(archivename))
         fs.unlinkSync(archivename);
-    mytask.add(archivename, filename/*, {m: 'm=LZMA'}*/).then(function() {
+    mytask.add(archivename, filename, {m: 'z=7'}).then(function() {
         utils.finish('Archived '+filename, started);
         fs.unlinkSync(filename);
         callback();
@@ -84,6 +84,8 @@ var querytable = {
 
 module.exports = {
     query: function(req, res) {
+        var i = counter.filenames.length - 1;
+        if (i < counter.n) return res.jsonp('Already started');
         var method = req.query.loc ? petrols.geoNear : petrols.allPetrols;
         method(req, res, function(result) {
             var n = result.length;
