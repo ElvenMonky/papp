@@ -3,6 +3,7 @@ var utils = require('./utils');
 var petrols = require('./petrols');
 var fs = require('fs');
 var zip = require('node-7z');
+var mytask = new zip();
 
 var counter = { n: -1, filenames: [], started: Date.now(), finished: Date.now()};
 var path = '/tmp/node-osrm-petrolapp';
@@ -18,42 +19,25 @@ var fillcoords = function(coords, petrols, d, b, e) {
 var writefile = function(res, filename, data, callback) {
     fs.writeFile(filename, JSON.stringify(data), function(err) {
         if (err) return utils.error(res, err.message);
+        packfile(res, filename, callback);
+    });
+}
+
+var packfile = function(res, filename, callback) {
+    var started = utils.start('Archiving data '+filename);
+    var archivename = filename.replace('.json','.zip');
+    if (fs.existsSync(archivename))
+        fs.unlinkSync(archivename);
+    mytask.add(archivename, filename/*, {m: 'm=LZMA'}*/).then(function() {
+        utils.finish('Archived '+filename, started);
+        fs.unlinkSync(filename);
         callback();
+    }).catch(function(err) {
+        utils.error(res, err);
     });
 }
 
-var querytablefull = function(counter, petrols) {
-    var filename = path+'/distance_table.json';
-    var n = petrols.length;
-    var coords = new Array(n);
-    fillcoords(coords, petrols, 0, 0, n);
-    querytable(coords, '(entire)', filename, counter);
-}
-
-var querytablepartial = function(counter, petrols, item) {
-    var label = ''+item.i+'_'+item.j;
-    var mi = item.m * item.i;
-    var mj = item.m * item.j;
-    var filename = path+'/distance_table'+label+'.json';
-    var n = petrols.length;
-    var d = Math.min(item.m, n - mj);
-    var coords = new Array(item.m + d);
-    fillcoords(coords, petrols, 0, mi, mi + item.m);
-    fillcoords(coords, petrols, item.m, mj, mj + d);
-    querytable(coords, label, filename, counter);
-}
-
-var querytable = function(coords, label, filename, counter) {
-    osrm.table(coords, label, function(result) {
-        data = packtable(result.distance_table);
-        writefile(counter.res, filename, data, function() {
-            counter.filenames.push(filename);
-            counter.callback(counter.queue.pop());
-        });
-    });
-}
-
-var packtable = function(table) {
+var optimizetable = function(table) {
     var n = table.length;
     var m = table[0].length;
     var value = 0;
@@ -63,6 +47,39 @@ var packtable = function(table) {
         }
     }
     return table;
+}
+
+var querytable = {
+    full: function(counter, petrols) {
+        var filename = path+'/distance_table.json';
+        var n = petrols.length;
+        var coords = new Array(n);
+        fillcoords(coords, petrols, 0, 0, n);
+        querytable.base(coords, '(entire)', filename, counter);
+    },
+
+    partial: function(counter, petrols, item) {
+        var label = ''+item.i+'_'+item.j;
+        var mi = item.m * item.i;
+        var mj = item.m * item.j;
+        var filename = path+'/distance_table'+label+'.json';
+        var n = petrols.length;
+        var d = Math.min(item.m, n - mj);
+        var coords = new Array(item.m + d);
+        fillcoords(coords, petrols, 0, mi, mi + item.m);
+        fillcoords(coords, petrols, item.m, mj, mj + d);
+        querytable.base(coords, label, filename, counter);
+    },
+
+    base: function(coords, label, filename, counter) {
+        osrm.table(coords, label, function(result) {
+            data = optimizetable(result.distance_table);
+            writefile(counter.res, filename, data, function() {
+                counter.filenames.push(filename.replace('.json','.zip'));
+                counter.callback(counter.queue.pop());
+            });
+        });
+    }
 }
 
 module.exports = {
@@ -88,11 +105,11 @@ module.exports = {
                     finished: Date.now(),
                     n: Math.floor(parts * (parts - 1) / 2),
                     queue: [],
-                    filenames: [filename],
+                    filenames: [filename.replace('.json','.zip')],
                     callback: function(item) {
                         utils.log('Progress '+(counter.filenames.length - 1)+'/'+counter.n);
                         if (item)
-                            return querytablepartial(counter, petrols, item);
+                            return querytable.partial(counter, petrols, item);
                         if (counter.filenames.length > counter.n) {
                             utils.finish('Complete', counter.started);
                             counter.finished = Date.now();
@@ -100,7 +117,7 @@ module.exports = {
                     }
                 };
                 if (parts < 3) {
-                    return querytablefull(counter, petrols);
+                    return querytable.full(counter, petrols);
                 }
                 for (var i=0; i<parts-1;++i) {
                     for (var j=i+1; j<parts; ++j) {
@@ -123,13 +140,12 @@ module.exports = {
     },
 
     pack: function(req, res) {
-        filename = '/tmp/distance_table.zip';
-        if (fs.existsSync(filename))
-            fs.unlinkSync(filename);
-        var mytask = new zip();
         var started = utils.start('Archiving data');
-        mytask.add(filename, counter.filenames/*, {m: 'm=LZMA'}*/).then(function() {
-            utils.finish('Complete', started);
+        var archivename = '/tmp/distance_table.zip';
+        if (fs.existsSync(archivename))
+            fs.unlinkSync(archivename);
+        mytask.add(archivename, counter.filenames/*, {m: 'm=LZMA'}*/).then(function() {
+            utils.finish('Archived', started);
         }).catch(function(err) {
             utils.error(res, err);
         });
@@ -137,7 +153,7 @@ module.exports = {
     },
 
     get: function(req, res) {
-        filename = '/tmp/distance_table.zip';
+        var filename = '/tmp/distance_table.zip';
         if (fs.existsSync(filename))
             return res.sendFile(filename);
         else utils.error(filename+' does not exist');
