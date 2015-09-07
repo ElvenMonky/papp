@@ -1,6 +1,7 @@
 var express = require('express');
 var osrm = require('./osrm');
 var table = require('./table');
+var fs = require('./fs');
 var petrols = require('./petrols');
 var utils = require('./utils');
 
@@ -17,7 +18,7 @@ app.get('/viaroute', osrm.viaroute);
 app.get('/table/query', table.query);
 app.get('/table/status', table.status);
 app.get('/table/pack', table.pack);
-app.get('/table/get', table.get);
+app.get('/table/get', fs.get);
 app.get('/petrols/get', petrols.get);
 app.get('/petrols/near', petrols.near);
 
