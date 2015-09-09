@@ -91,11 +91,14 @@ var querytable = {
         var labels = item ? [''+item.i+'_'+item.j, ''+item.j+'_'+item.i, ''+item.j+'_'+item.j, ''+item.i+'_'+item.i] : ['(entire)'];
         osrm.table(coords, counter.res, labels[0], function(result) {
             var data = querytable.optimize(result.distance_table, counter.m, diag, first);
+            var m = 0;
             for (var k=0; k<data.length; ++k) {
                 var filename = fs.fullname('distance_table'+labels[k]+'.json');
                 fs.writefile(counter.res, filename, data[k], function() {
                     counter.filenames.push(filename.replace('.json','.zip'));
-                    counter.callback(counter.queue.pop());
+                    ++m;
+                    if (m == data.length)
+                        counter.callback(counter.queue.pop());
                 });
             }
         });
