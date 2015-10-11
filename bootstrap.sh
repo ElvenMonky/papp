@@ -11,7 +11,8 @@ CURRENT_DIR=$(pwd)
 CXX=${CXX:-clang++}
 TARGET=${TARGET:-Release}
 OSRM_RELEASE=${OSRM_RELEASE:-"v4.7.0"}
-OSRM_REPO=${OSRM_REPO:-"https://github.com/Project-OSRM/osrm-backend.git"}
+OSRM_REPO_BACK=${OSRM_REPO_BACK:-"https://petrolapp@bitbucket.org/petrolapp/osrm-backend-petrolapp.git"}
+OSRM_REPO_FRONT=${OSRM_REPO_FRONT:-"https://petrolapp@bitbucket.org/petrolapp/osrm-frontend-petrolapp.git"}
 
 function all_deps() {
     dep cmake 3.2.2 &
@@ -98,13 +99,15 @@ function main() {
     fi
 
     # make sure we rebuild if previous build was not successful
-    if [[ ! -f osrm-backend-${TARGET}/build/osrm-extract ]] || [[ ! -f ${MASON_HOME}/bin/osrm-extract ]]; then
-        mkdir -p osrm-backend-${TARGET}
-        git clone ${OSRM_REPO} osrm-backend-${TARGET}
-        cd osrm-backend-${TARGET}
+    if [[ ! -f osrm-backend-petrolapp/build/osrm-extract ]] || [[ ! -f ${MASON_HOME}/bin/osrm-extract ]]; then
+        mkdir -p osrm-frontend-petrolapp
+        git clone ${OSRM_REPO_FRONT} osrm-frontend-petrolapp
+        mkdir -p osrm-backend-petrolapp
+        git clone ${OSRM_REPO_BACK} osrm-backend-petrolapp
+        cd osrm-backend-petrolapp
 
         echo "Using OSRM ${OSRM_RELEASE}"
-        echo "Using OSRM ${OSRM_REPO}"
+        echo "Using OSRM ${OSRM_REPO_BACK}"
         git checkout .
         git checkout ${OSRM_RELEASE}
 
