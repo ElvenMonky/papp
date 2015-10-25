@@ -10,7 +10,7 @@ CURRENT_DIR=$(pwd)
 # default to clang
 CXX=${CXX:-clang++}
 TARGET=${TARGET:-Release}
-OSRM_RELEASE=${OSRM_RELEASE:-"v4.7.0"}
+OSRM_RELEASE=${OSRM_RELEASE:-"master"}
 OSRM_REPO_BACK=${OSRM_REPO_BACK:-"https://petrolapp@bitbucket.org/petrolapp/osrm-backend-petrolapp.git"}
 OSRM_REPO_FRONT=${OSRM_REPO_FRONT:-"https://petrolapp@bitbucket.org/petrolapp/osrm-frontend-petrolapp.git"}
 
@@ -108,7 +108,7 @@ function main() {
 
         echo "Using OSRM ${OSRM_RELEASE}"
         echo "Using OSRM ${OSRM_REPO_BACK}"
-        git checkout .
+        //git checkout .
         git checkout ${OSRM_RELEASE}
 
         # workaround https://github.com/Project-OSRM/node-osrm/issues/92
