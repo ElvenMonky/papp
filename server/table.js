@@ -31,7 +31,7 @@ var querytable = {
         for (var i=0; i<m; ++i) {
             arr[i] = new Array(n-m);
             for (var j=m; j<n; ++j) {
-                arr[i][j-m] = table[i][j];
+                arr[i][j-m] = Math.round(table[i][j]);
             }
         }
         data.push(arr);
@@ -40,7 +40,7 @@ var querytable = {
         for (var i=m; i<n; ++i) {
             arr[i-m] = new Array(m);
             for (var j=0; j<m; ++j) {
-                arr[i-m][j] = table[i][j];
+                arr[i-m][j] = Math.round(table[i][j]);
             }
         }
         data.push(arr);
@@ -50,7 +50,7 @@ var querytable = {
         for (var i=m; i<n; ++i) {
             arr[i-m] = new Array(n-m);
             for (var j=m; j<n; ++j) {
-                arr[i-m][j-m] = table[i][j];
+                arr[i-m][j-m] = Math.round(table[i][j]);
             }
         }
         data.push(arr);
@@ -60,7 +60,7 @@ var querytable = {
         for (var i=0; i<m; ++i) {
             arr[i] = new Array(m);
             for (var j=0; j<m; ++j) {
-                arr[i][j] = table[i][j];
+                arr[i][j] = Math.round(table[i][j]);
             }
         }
         data.push(arr);
