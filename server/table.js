@@ -166,12 +166,15 @@ module.exports = {
         var path = './distance_table';
         var bin_path = path+'_bin';
         var filenames = fs.listfiles(path);
-        var threads = req.query.threads || 100;
+        utils.log('Convering '+filenames.length+' compressed json files to binary format');
+        var threads = req.query.threads || 10;
         var queue = async.queue(function(archivename, callback) {
             if (archivename != 'petrols_list.zip') {
                 fs.readfile(undefined, path, fs.fullname(archivename, path), function(filename, data) {
                     var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
-                    fs.writefileraw(undefined, binfilename, querytable.buffer(data), function() {});
+                    fs.writefileraw(undefined, binfilename, querytable.buffer(data), function() {
+                        utils.log('Written: '+binfilename);
+                    });
                 });
             }
             callback();
