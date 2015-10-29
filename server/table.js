@@ -1,3 +1,4 @@
+var async = require('async');
 var osrm = require('./osrm');
 var utils = require('./utils');
 var petrols = require('./petrols');
@@ -165,14 +166,17 @@ module.exports = {
         var path = './distance_table';
         var bin_path = path+'_bin';
         var filenames = fs.listfiles(path);
-        for (var i=0; i<filenames.length; ++i) {
-            var archivename = filenames[i];
-            if (archivename == 'petrols_list.zip') continue;
-            fs.readfile(res, path, fs.fullname(archivename, path), function(filename, data) {
-                var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
-                fs.writefileraw(undefined, binfilename, querytable.buffer(data), function() {});
-            });
-        }
+        var threads = req.query.threads || 100;
+        var queue = async.queue(function(archivename, callback) {
+            if (archivename != 'petrols_list.zip') {
+                fs.readfile(undefined, path, fs.fullname(archivename, path), function(filename, data) {
+                    var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
+                    fs.writefileraw(undefined, binfilename, querytable.buffer(data), function() {});
+                });
+            }
+            callback();
+        }, threads);
+        queue.push(filenames);
         res.jsonp('Calculations started');
     },
 
