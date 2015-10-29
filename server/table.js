@@ -15,6 +15,29 @@ var fillcoords = function(coords, petrols, d, b, e) {
 
 
 var querytable = {
+    buffer: function(data) {
+        var n = data.length;
+        var m = data[0].length;
+        var buffer = new Buffer(n * m * 4);
+        for (var i=0, k=0; i<n; ++i) {
+            for (var j=0; j<m; ++j, k+=4) {
+                buffer.writeUInt32BE(data[i][j], k);
+            }
+        }
+        return buffer;
+    },
+
+    crop: function(table, i1, i2, j1, j2) {
+        var arr = new Array(i2-i1);
+        for (var i=i1; i<i2; ++i) {
+            arr[i-i1] = new Array(j2-j1);
+            for (var j=j1; j<j2; ++j) {
+                arr[i-i1][j-j1] = Math.round(table[i][j]);
+            }
+        }
+        return arr;
+    },
+
     optimize: function(table, m, diag, first) {
         var n = table.length;
         var value = 0;
@@ -26,44 +49,14 @@ var querytable = {
         if (n <= m)
             return [table];
         var data = [];
-        //i,j
-        var arr = new Array(m);
-        for (var i=0; i<m; ++i) {
-            arr[i] = new Array(n-m);
-            for (var j=m; j<n; ++j) {
-                arr[i][j-m] = Math.round(table[i][j]);
-            }
-        }
-        data.push(arr);
-        //j,i
-        arr = new Array(n-m);
-        for (var i=m; i<n; ++i) {
-            arr[i-m] = new Array(m);
-            for (var j=0; j<m; ++j) {
-                arr[i-m][j] = Math.round(table[i][j]);
-            }
-        }
-        data.push(arr);
-        if (!diag) return data;
-        //j,j
-        arr = new Array(n-m);
-        for (var i=m; i<n; ++i) {
-            arr[i-m] = new Array(n-m);
-            for (var j=m; j<n; ++j) {
-                arr[i-m][j-m] = Math.round(table[i][j]);
-            }
-        }
-        data.push(arr);
-        if (!first) return data;
-        //i,i
-        arr = new Array(m);
-        for (var i=0; i<m; ++i) {
-            arr[i] = new Array(m);
-            for (var j=0; j<m; ++j) {
-                arr[i][j] = Math.round(table[i][j]);
-            }
-        }
-        data.push(arr);
+        data.push(querytable.crop(table, 0, m, m, n)); //i,j
+        data.push(querytable.crop(table, m, n, 0, m)); //j,i
+        if (!diag)
+            return data;
+        data.push(querytable.crop(table, m, n, m, n)); //j,j
+        if (!first)
+            return data;
+        data.push(querytable.crop(table, 0, m, 0, m)); //i,i
         return data;
     },
 
@@ -166,6 +159,21 @@ module.exports = {
         var i = counter.filenames.length - 1;
         var finished = i < counter.n ? Date.now() : counter.finished;
         res.jsonp({'Progress': ''+i+'/'+counter.n, 'Duration': finished - counter.started });
+    },
+
+    convert: function(req, res) {
+        var path = './distance_table';
+        var bin_path = path+'_bin';
+        var filenames = fs.listfiles(path);
+        for (var i=0; i<filenames.length; ++i) {
+            var archivename = filenames[i];
+            if (archivename == 'petrols_list.zip') continue;
+            fs.readfile(res, path, fs.fullname(archivename, path), function(filename, data) {
+                var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
+                fs.writefileraw(undefined, binfilename, querytable.buffer(data), function() {});
+            });
+        }
+        res.jsonp('Calculations started');
     },
 
     pack: function(req, res) {

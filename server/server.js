@@ -17,6 +17,7 @@ app.get('/timestamp', osrm.timestamp);
 app.get('/viaroute', osrm.viaroute);
 app.get('/table/query', table.query);
 app.get('/table/status', table.status);
+app.get('/table/convert', table.convert);
 app.get('/table/pack', table.pack);
 app.get('/table/get', fs.get);
 app.get('/petrols/get', petrols.get);

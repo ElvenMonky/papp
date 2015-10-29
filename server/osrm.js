@@ -74,7 +74,7 @@ module.exports = {
         osrm.table(params, function(err, result) {
             utils.finish('Queried '+label, started);
             //utils.log(result);
-            if (err) return utils.error(res, err.message);
+            if (err) return utils.error(undefined, err.message);
             callback(result);
         });
     }
