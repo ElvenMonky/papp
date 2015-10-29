@@ -174,11 +174,16 @@ module.exports = {
                     var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
                     fs.writefileraw(undefined, binfilename, querytable.buffer(data), function() {
                         utils.log('Written: '+binfilename);
+                        callback();
                     });
                 });
+            } else {
+                callback();
             }
-            callback();
         }, threads);
+        queue.drain = function() {
+            utils.log('Convertion finished');
+        }
         queue.push(filenames);
         res.jsonp('Calculations started');
     },
