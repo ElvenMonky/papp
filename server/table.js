@@ -23,9 +23,9 @@ var querytable = {
         for (var i=0, k=0; i<n; ++i) {
             for (var j=0; j<m; ++j, k+=4) {
                 if (0 <= data[i][j] && data[i][j] < 0xFFFFFFFF) {
-                    buffer.writeUInt32BE(data[i][j], k);
+                    buffer.writeUInt32LE(data[i][j], k);
                 } else {
-                    buffer.writeUInt32BE(0, k);
+                    buffer.writeUInt32LE(0, k);
                     utils.log('Value out of range['+i+','+j+']: '+data[i][j]);
                 }
             }
