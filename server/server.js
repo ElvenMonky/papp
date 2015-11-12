@@ -3,6 +3,7 @@ var osrm = require('./osrm');
 var table = require('./table');
 var fs = require('./fs');
 var petrols = require('./petrols');
+var viapetrols = require('./viapetrols');
 var utils = require('./utils');
 
 var app = express();
@@ -22,11 +23,16 @@ app.get('/table/pack', table.pack);
 app.get('/table/get', fs.get);
 app.get('/petrols/get', petrols.get);
 app.get('/petrols/near', petrols.near);
+app.get('/viapetrols', viapetrols.get);
 
-utils.log('Listening on port: ' + 8888);
-var server = app.listen(8888, '0.0.0.0');
-process.on('SIGTERM', function () {
-    if (server === undefined) return;
-    server.close();
+petrols.init(function(){
+    viapetrols.init(function(result){
+        osrm.init(result);
+        utils.log('Listening on port: ' + 8888);
+        var server = app.listen(8888, '0.0.0.0');
+        process.on('SIGTERM', function () {
+            if (server === undefined) return;
+            server.close();
+        });
+    });
 });
-petrols.init();

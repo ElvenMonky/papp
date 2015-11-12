@@ -37,6 +37,7 @@ public:
     static NAN_METHOD(nearest);
     static NAN_METHOD(table);
     static NAN_METHOD(match);
+    static NAN_METHOD(petrols);
 
     static void Run(_NAN_METHOD_ARGS, route_parameters_ptr);
     static void AsyncRun(uv_work_t*);
@@ -63,6 +64,7 @@ void Engine::Initialize(Handle<Object> target) {
     NODE_SET_PROTOTYPE_METHOD(lcons, "nearest", nearest);
     NODE_SET_PROTOTYPE_METHOD(lcons, "table", table);
     NODE_SET_PROTOTYPE_METHOD(lcons, "match", match);
+    NODE_SET_PROTOTYPE_METHOD(lcons, "petrols", petrols);
     lcons->Set(NanNew("libosrm_version"), NanNew(LIBOSRM_GIT_REVISION));
     target->Set(NanNew("OSRM"), lcons->GetFunction());
     NanAssignPersistent(constructor, lcons);
@@ -92,6 +94,11 @@ NAN_METHOD(Engine::New)
                     base = *String::Utf8Value(path->ToString());
                 }
 
+                Local<Value> path1 = params->Get(NanNew("petrols_path"));
+                if (!path1->IsUndefined()) {
+                    lib_config.server_paths["petrols"] = *String::Utf8Value(path1->ToString());
+                }
+
                 Local<Value> max_locations_distance_table = params->Get(NanNew("distance_table"));
                 if (!max_locations_distance_table->IsUndefined()) {
                     if (!max_locations_distance_table->IsUint32()) {
@@ -99,6 +106,26 @@ NAN_METHOD(Engine::New)
                         NanReturnUndefined();
                     } else {
                         lib_config.max_locations_distance_table = max_locations_distance_table->ToUint32()->Value();
+                    }
+                }
+
+                Local<Value> max_petrols_per_tile = params->Get(NanNew("petrols_tile"));
+                if (!max_petrols_per_tile->IsUndefined()) {
+                    if (!max_petrols_per_tile->IsUint32()) {
+                        NanThrowError("the number of petrols per tile in the distance table must be an unsigned integer");
+                        NanReturnUndefined();
+                    } else {
+                        lib_config.max_petrols_per_tile = max_petrols_per_tile->ToUint32()->Value();
+                    }
+                }
+
+                Local<Value> total_petrols = params->Get(NanNew("petrols_total"));
+                if (!total_petrols->IsUndefined()) {
+                    if (!total_petrols->IsUint32()) {
+                        NanThrowError("total number of petrols in the distance table must be an unsigned integer");
+                        NanReturnUndefined();
+                    } else {
+                        lib_config.total_petrols = total_petrols->ToUint32()->Value();
                     }
                 }
 
@@ -423,6 +450,57 @@ NAN_METHOD(Engine::table)
 
         params->coordinates.emplace_back(static_cast<int>(coordinate_pair->Get(0)->NumberValue()*COORDINATE_PRECISION),
                                          static_cast<int>(coordinate_pair->Get(1)->NumberValue()*COORDINATE_PRECISION));
+    }
+
+    Run(args, std::move(params));
+    NanReturnUndefined();
+}
+
+NAN_METHOD(Engine::petrols)
+{
+    NanScope();
+    if (args.Length() < 2) {
+        NanThrowTypeError("two arguments required");
+        NanReturnUndefined();
+    }
+
+    if (args[0]->IsNull() || args[0]->IsUndefined()) {
+        NanThrowError("first arg must be an object");
+        NanReturnUndefined();
+    }
+    Local<Object> obj = args[0]->ToObject();
+
+    Local<Value> petrols = obj->Get(NanNew("petrols"));
+    if (!petrols->IsArray()) {
+        NanThrowError("petrols must be an array of indices");
+        NanReturnUndefined();
+    }
+
+    Local<Array> petrols_array = Local<Array>::Cast(petrols);
+    if (petrols_array->Length() != 2) {
+        NanThrowError("exactly two petrols must be provided");
+        NanReturnUndefined();
+    }
+
+    route_parameters_ptr params = make_unique<RouteParameters>();
+    params->service = "viapetrols";
+
+    // add petrols
+    for (uint32_t i = 0; i < petrols_array->Length(); ++i) {
+        Local<Value> petrol = petrols_array->Get(i);
+        params->petrols.emplace_back(static_cast<unsigned>(petrol->Uint32Value()));
+    }
+
+    if (obj->Has(NanNew("initial_tank"))) {
+        params->initial_tank = obj->Get(NanNew("initial_tank"))->NumberValue();
+    }
+
+    if (obj->Has(NanNew("full_tank"))) {
+        params->full_tank = obj->Get(NanNew("full_tank"))->NumberValue();
+    }
+
+    if (obj->Has(NanNew("fuel_consumption"))) {
+        params->fuel_consumption = obj->Get(NanNew("fuel_consumption"))->NumberValue();
     }
 
     Run(args, std::move(params));

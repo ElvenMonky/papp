@@ -2,9 +2,7 @@ var OSRM = require('../');
 var geometry = require('./geometry');
 var utils = require('./utils');
 
-var started = utils.start('Loading map');
-var osrm = new OSRM({path: './map/map.osrm', distance_table:10000/*, shared: true*/});
-utils.finish('Loading complete', started);
+var osrm;
 
 var viaroute = function(req, res, query, web) {
     var params = {
@@ -27,6 +25,13 @@ var viaroute = function(req, res, query, web) {
 }
 
 module.exports = {
+    init: function(total_petrols) {
+        var started = utils.start('Loading map');
+        osrm = new OSRM({path: './map/map.osrm', petrols_path: './distance_table_bin',
+                    petrols_tile: 100, petrols_total: total_petrols, distance_table:10000/*, shared: true*/});
+        utils.finish('Loading complete', started);
+    },
+
     // Accepts a query like:
     // http://localhost:8888?start=50.519930,5.438640&end=50.513191,5.415852
     process: function(req, res) {
@@ -73,6 +78,23 @@ module.exports = {
         var started = utils.start('Querying distance table '+label);
         osrm.table(params, function(err, result) {
             utils.finish('Queried '+label, started);
+            //utils.log(result);
+            if (err) return utils.error(undefined, err.message);
+            callback(result);
+        });
+    },
+
+    viapetrols: function(petrols, init_tank, full_tank, consume, res, callback) {
+        //utils.log(coords);
+        var params = {
+            petrols: petrols,
+            initial_tank: init_tank,
+            full_tank: full_tank,
+            fuel_consumption: consume
+        };
+        var started = utils.start('Querying petrols route');
+        osrm.petrols(params, function(err, result) {
+            utils.finish('Queried', started);
             //utils.log(result);
             if (err) return utils.error(undefined, err.message);
             callback(result);

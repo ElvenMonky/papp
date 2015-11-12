@@ -5,7 +5,7 @@ var utils = require('./utils');
 var Schema = mongoose.Schema;
 var Model;
 
-module.exports.init = function() {
+module.exports.init = function(callback) {
     var started = utils.start('Connecting to Mongo database');
     var url = "mongodb://petrolapp:ranok2015@ds039231.mongolab.com:39231/brandstof";
     mongoose.connect(url);
@@ -15,6 +15,7 @@ module.exports.init = function() {
         var schema = new Schema({}, { strict: false });
         Model = mongoose.model('stations', schema, 'stations');
         utils.finish('Mongo database connected', started);
+        callback();
     });
 }
 
