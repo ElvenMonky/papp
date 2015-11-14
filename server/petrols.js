@@ -19,6 +19,8 @@ module.exports.init = function(callback) {
     });
 }
 
+module.exports.petrol_types = ['Diesel', 'Super 95'];
+
 var getPetrols = function(result, fuel) {
     var n = result.length;
     var petrols = new Array();
@@ -66,7 +68,7 @@ module.exports.allPetrols = function(req, res, callback) {
     var started = utils.start('Querying mongodb');
     var query = {};
     if (req.query._id !== undefined) query._id = req.query._id;
-    Model.find(query).select('loc').lean().exec(function(err, result){
+    Model.find(query).select('loc name petrols').lean().exec(function(err, result){
         utils.finish('Queried', started);
         if (err) return utils.error(res, err.message);
         utils.log('Total petrols found: ' + result.length);

@@ -25,10 +25,10 @@ var viaroute = function(req, res, query, web) {
 }
 
 module.exports = {
-    init: function(total_petrols) {
+    init: function(petrols_total, petrols_tile) {
         var started = utils.start('Loading map');
         osrm = new OSRM({path: './map/map.osrm', petrols_path: './distance_table_bin',
-                    petrols_tile: 1000, petrols_total: total_petrols, distance_table:10000/*, shared: true*/});
+                    petrols_tile: petrols_tile || 1000, petrols_total: petrols_total, distance_table:10000/*, shared: true*/});
         utils.finish('Loading complete', started);
     },
 

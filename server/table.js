@@ -16,6 +16,18 @@ var fillcoords = function(coords, petrols, d, b, e) {
 
 
 var querytable = {
+    summary: function(data) {
+        var n = data.length;
+        var m = petrols.petrol_types.length;
+        var buffer = new Buffer(n * 4 * m);
+        for (var i=0, k=0; i<n; ++i) {
+            for (var j=0; j<m; ++j, k+=4) {
+                buffer.writeFloatLE(data[i].prices[j], k);
+            }
+        }
+        return buffer;
+    },
+
     buffer: function(data) {
         var n = data.length;
         var m = data[0].length;
@@ -117,13 +129,22 @@ module.exports = {
         method(req, res, function(result) {
             var n = result.length;
             if (n < 2) return utils.error(res, 'only '+n+' petrols found');
-            var petrols = new Array(n);
+            var petrols_list = new Array(n);
             for (var i=0; i < n; ++i) {
                 var obj = result[i].obj || result[i];
-                petrols[i] = { 'id': obj._id, 'loc': obj.loc};
+                var arr = new Array(petrols.petrol_types.length);
+                for (var j=0; j<arr.length; ++j) {
+                    arr[j] = 0;
+                    for (var k=0; k<obj.petrols.length; ++k)
+                        if (petrols.petrol_types[j] == obj.petrols[k].name) {
+                            arr[j] = obj.petrols[k].price;
+                            break;
+                        }
+                }
+                petrols_list[i] = { 'id': obj._id, 'loc': obj.loc, 'prices': arr};
             }
             var filename = fs.fullname('petrols_list.json');
-            fs.writefile(res, filename, petrols, function() {
+            fs.writefile(res, filename, petrols_list, function() {
                 var m = Math.min(req.query.partsize || n, n);
                 var parts = Math.ceil(n / m);
                 counter = {
@@ -137,7 +158,7 @@ module.exports = {
                     callback: function(item) {
                         utils.log('Progress '+(counter.filenames.length - 1)+'/'+counter.n);
                         if (item)
-                            return querytable.partial(counter, petrols, item);
+                            return querytable.partial(counter, petrols_list, item);
                         if (counter.filenames.length > counter.n) {
                             utils.finish('Complete', counter.started);
                             counter.finished = Date.now();
@@ -145,7 +166,7 @@ module.exports = {
                     }
                 };
                 if (parts < 3) {
-                    return querytable.full(counter, petrols);
+                    return querytable.full(counter, petrols_list);
                 }
                 for (var i=0; i<parts-1;++i) {
                     for (var j=i+1; j<parts; ++j) {
@@ -174,17 +195,14 @@ module.exports = {
         utils.log('Convering '+filenames.length+' compressed json files to binary format');
         var threads = req.query.threads || 10;
         var queue = async.queue(function(archivename, callback) {
-            if (archivename != 'petrols_list.zip') {
-                fs.readfile(undefined, path, fs.fullname(archivename, path), function(filename, data) {
-                    var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
-                    fs.writefileraw(undefined, binfilename, querytable.buffer(data), function() {
-                        utils.log('Written: '+binfilename);
-                        callback();
-                    });
+            fs.readfile(undefined, path, fs.fullname(archivename, path), function(filename, data) {
+                var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
+                var summary = (archivename == 'petrols_list.zip');
+                fs.writefileraw(undefined, binfilename, (summary ? querytable.summary : querytable.buffer)(data), function() {
+                    utils.log('Written: '+binfilename);
+                    callback();
                 });
-            } else {
-                callback();
-            }
+            });
         }, threads);
         queue.drain = function() {
             utils.log('Convertion finished');

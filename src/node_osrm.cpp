@@ -109,26 +109,6 @@ NAN_METHOD(Engine::New)
                     }
                 }
 
-                Local<Value> max_petrols_per_tile = params->Get(NanNew("petrols_tile"));
-                if (!max_petrols_per_tile->IsUndefined()) {
-                    if (!max_petrols_per_tile->IsUint32()) {
-                        NanThrowError("the number of petrols per tile in the distance table must be an unsigned integer");
-                        NanReturnUndefined();
-                    } else {
-                        lib_config.max_petrols_per_tile = max_petrols_per_tile->ToUint32()->Value();
-                    }
-                }
-
-                Local<Value> total_petrols = params->Get(NanNew("petrols_total"));
-                if (!total_petrols->IsUndefined()) {
-                    if (!total_petrols->IsUint32()) {
-                        NanThrowError("total number of petrols in the distance table must be an unsigned integer");
-                        NanReturnUndefined();
-                    } else {
-                        lib_config.total_petrols = total_petrols->ToUint32()->Value();
-                    }
-                }
-
                 Local<Value> shared_memory = params->Get(NanNew("shared_memory"));
                 if (!shared_memory->IsUndefined()) {
                     if (!shared_memory->IsBoolean()) {
