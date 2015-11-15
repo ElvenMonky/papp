@@ -483,6 +483,14 @@ NAN_METHOD(Engine::petrols)
         params->fuel_consumption = obj->Get(NanNew("fuel_consumption"))->NumberValue();
     }
 
+    if (obj->Has(NanNew("price_weight"))) {
+        params->price_weight = obj->Get(NanNew("price_weight"))->NumberValue();
+    }
+
+    if (obj->Has(NanNew("optimized"))) {
+        params->optimized = obj->Get(NanNew("optimized"))->BooleanValue();
+    }
+
     Run(args, std::move(params));
     NanReturnUndefined();
 }

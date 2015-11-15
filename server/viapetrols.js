@@ -5,10 +5,11 @@ var utils = require('./utils');
 var allPetrols = [];
 
 module.exports.init = function(callback) {
-    petrols.allPetrols({query:{}}, undefined, function(result) {
+    /*petrols.allPetrols({query:{}}, undefined, function(result) {
         allPetrols = result;
         callback(result.length);
-    });
+    });*/
+    callback();
 }
 
 module.exports.get = function(req, res) {

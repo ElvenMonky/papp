@@ -26,8 +26,8 @@ app.get('/petrols/near', petrols.near);
 app.get('/viapetrols', viapetrols.get);
 
 petrols.init(function(){
-    viapetrols.init(function(result){
-        osrm.init(result);
+    viapetrols.init(function(){
+        osrm.init();
         utils.log('Listening on port: ' + 8888);
         var server = app.listen(8888, '0.0.0.0');
         process.on('SIGTERM', function () {

@@ -16,11 +16,14 @@ var fillcoords = function(coords, petrols, d, b, e) {
 
 
 var querytable = {
-    summary: function(data) {
+    summary: function(data, partsize) {
         var n = data.length;
         var m = petrols.petrol_types.length;
-        var buffer = new Buffer(n * 4 * m);
-        for (var i=0, k=0; i<n; ++i) {
+        var buffer = new Buffer(4 * (n * m + 3));
+        buffer.writeUInt32LE(partsize, 0);
+        buffer.writeUInt32LE(n, 4);
+        buffer.writeUInt32LE(m, 8);
+        for (var i=0, k=12; i<n; ++i) {
             for (var j=0; j<m; ++j, k+=4) {
                 buffer.writeFloatLE(data[i].prices[j], k);
             }
@@ -194,11 +197,13 @@ module.exports = {
         var filenames = fs.listfiles(path);
         utils.log('Convering '+filenames.length+' compressed json files to binary format');
         var threads = req.query.threads || 10;
+        var partsize = 1000;
         var queue = async.queue(function(archivename, callback) {
             fs.readfile(undefined, path, fs.fullname(archivename, path), function(filename, data) {
                 var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
                 var summary = (archivename == 'petrols_list.zip');
-                fs.writefileraw(undefined, binfilename, (summary ? querytable.summary : querytable.buffer)(data), function() {
+                if (archivename == 'distance_table0_0.zip') partsize = data.length;
+                fs.writefileraw(undefined, binfilename, summary ? querytable.summary(data, partsize) : querytable.buffer(data), function() {
                     utils.log('Written: '+binfilename);
                     callback();
                 });
