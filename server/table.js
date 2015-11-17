@@ -25,7 +25,7 @@ var querytable = {
         buffer.writeUInt32LE(m, 8);
         for (var i=0, k=12; i<n; ++i) {
             for (var j=0; j<m; ++j, k+=4) {
-                buffer.writeFloatLE(data[i].prices[j], k);
+                buffer.writeUInt32LE(data[i].prices[j] * 1000, k);
             }
         }
         return buffer;

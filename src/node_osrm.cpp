@@ -483,8 +483,12 @@ NAN_METHOD(Engine::petrols)
         params->fuel_consumption = obj->Get(NanNew("fuel_consumption"))->NumberValue();
     }
 
-    if (obj->Has(NanNew("price_weight"))) {
-        params->price_weight = obj->Get(NanNew("price_weight"))->NumberValue();
+    if (obj->Has(NanNew("fuel_type"))) {
+        params->fuel_type = static_cast<unsigned>(obj->Get(NanNew("fuel_type"))->Uint32Value());
+    }
+
+    if (obj->Has(NanNew("time_cost"))) {
+        params->time_cost = static_cast<unsigned>(obj->Get(NanNew("time_cost"))->Uint32Value());
     }
 
     if (obj->Has(NanNew("optimized"))) {

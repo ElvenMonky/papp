@@ -83,13 +83,16 @@ module.exports = {
         });
     },
 
-    viapetrols: function(petrols, init_tank, full_tank, consume, res, callback) {
+    viapetrols: function(petrols, init_tank, full_tank, fuel_consumption, fuel_type, time_cost, optimized, res, callback) {
         //utils.log(coords);
         var params = {
             petrols: petrols,
             initial_tank: init_tank,
             full_tank: full_tank,
-            fuel_consumption: consume
+            fuel_consumption: fuel_consumption,
+            fuel_type: fuel_type,
+            time_cost: time_cost,
+            optimized: optimized
         };
         var started = utils.start('Querying petrols route');
         osrm.petrols(params, function(err, result) {

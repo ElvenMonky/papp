@@ -12,16 +12,23 @@ module.exports.init = function(callback) {
     callback();
 }
 
+var def = function(value, defvalue) {
+    return (value == undefined ? defvalue : value);
+}
+
 module.exports.get = function(req, res) {
-    initial_tank = req.query.initial_tank || 60;
-    full_tank = req.query.full_tank || 60;
-    fuel_consumption = req.query.fuel_consumption || 0.1;
+    initial_tank = def(req.query.initial_tank, 60);
+    full_tank = def(req.query.full_tank, 60);
+    fuel_consumption = def(req.query.fuel_consumption, 0.1);
+    fuel_type = def(req.query.fuel_type, 0);
+    time_cost = def(req.query.time_cost, 20);
+    optimized = def(req.query.optimized, true);
     var petrols = req.query.petrol;
     for(var i=0; i<petrols.length; ++i)
     {
         petrols[i] = +petrols[i];
     }
-    osrm.viapetrols(petrols, initial_tank, full_tank, fuel_consumption, res, function(result) {
+    osrm.viapetrols(petrols, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, optimized, res, function(result) {
         return res.jsonp(result);
     });
 }
