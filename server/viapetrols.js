@@ -6,10 +6,11 @@ var fs = require('./fs');
 var allPetrols = [];
 
 module.exports.init = function(callback) {
-    petrols.allPetrols({query:{}}, undefined, function(result) {
+    /*petrols.allPetrols({query:{}}, undefined, function(result) {
         allPetrols = result;
         callback();
-    });
+    });*/
+    callback();
 }
 
 var def = function(value, defvalue) {
@@ -17,7 +18,7 @@ var def = function(value, defvalue) {
 }
 
 var getRandom = function(min, max) {
-    return Math.random() * (max - min) + min;
+    return 0.001 * Math.floor(1000 * Math.random() * (max - min) + min);
 }
 
 module.exports.get = function(req, res) {
@@ -39,22 +40,25 @@ module.exports.get = function(req, res) {
 
 var testStep = function(q, data, i) {
     if (i > 0) {
-        var initial_tank = def(q.initial_tank, getRandom(0, 60));
+        var n = 625;//allPetrols.length;
         var full_tank = def(q.full_tank, getRandom(5, 60));
+        var initial_tank = def(q.initial_tank, getRandom(0, full_tank));
         var fuel_consumption = def(q.fuel_consumption, getRandom(0.04, 0.3));
-        var fuel_type = def(q.fuel_type, getRandom(0, petrols.petrol_types));
-        var time_cost = def(q.time_cost, getRandom(1, 1000000));
-        var petrols_list = [getRandom(0, allPetrols.length), getRandom(0, allPetrols.length)];
-        data.push_back([petrols_list[0], petrols_list[1], initial_tank, full_tank, fuel_consumption, fuel_type, time_cost]);
+        var fuel_type = def(q.fuel_type, Math.floor(getRandom(0, petrols.petrol_types.length)));
+        var time_cost = def(q.time_cost, Math.floor(Math.pow(10, getRandom(0, 6))));
+        var petrols_list = [Math.floor(getRandom(0, n)), Math.floor(getRandom(0, n))];
+        utils.log('Test '+i+' ['+petrols_list[0]+'->'+petrols_list[1]+']('+initial_tank+
+                '/'+full_tank+'/'+fuel_consumption+':'+fuel_type+':'+petrols.petrol_types[fuel_type]+')<'+time_cost+'>');
+        data.push([petrols_list[0], petrols_list[1], initial_tank, full_tank, fuel_consumption, fuel_type, time_cost]);
         osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, false, undefined, function(result) {
-            data.push_back(result);
+            data.push(result);
             osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, true, undefined, function(result) {
-                data.push_back(result);
+                data.push(result);
                 testStep(q, data, i-1);
             });
         });
     } else {
-        writefileraw(fullname('test_result.json'), data, function() {});
+        writefileraw(undefined, fullname('test_result.json'), data, function() {});
     }
 }
 
