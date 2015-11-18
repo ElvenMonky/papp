@@ -18,7 +18,7 @@ var def = function(value, defvalue) {
 }
 
 var getRandom = function(min, max) {
-    return 0.001 * Math.floor(1000 * Math.random() * (max - min) + min);
+    return 0.001 * Math.floor(1000 * Math.random() * (max - min)) + min;
 }
 
 module.exports.get = function(req, res) {
@@ -42,7 +42,7 @@ var testStep = function(q, data, i) {
     if (i > 0) {
         var n = 625;//allPetrols.length;
         var full_tank = def(q.full_tank, getRandom(5, 60));
-        var initial_tank = def(q.initial_tank, getRandom(0, full_tank));
+        var initial_tank = def(q.initial_tank, getRandom(1, full_tank));
         var fuel_consumption = def(q.fuel_consumption, getRandom(0.04, 0.3));
         var fuel_type = def(q.fuel_type, Math.floor(getRandom(0, petrols.petrol_types.length)));
         var time_cost = def(q.time_cost, Math.floor(Math.pow(10, getRandom(0, 6))));
@@ -58,7 +58,7 @@ var testStep = function(q, data, i) {
             });
         });
     } else {
-        writefileraw(undefined, fullname('test_result.json'), data, function() {});
+        fs.writefileraw(undefined, fs.fullname('test_result.json'), JSON.stringify(data), function() {});
     }
 }
 
