@@ -17,6 +17,7 @@ var fillcoords = function(coords, petrols, d, b, e) {
 
 var querytable = {
     summary: function(data, partsize) {
+        var price = 0;
         var n = data.length;
         var m = petrols.petrol_types.length;
         var buffer = new Buffer(4 * (n * m + 3));
@@ -25,7 +26,9 @@ var querytable = {
         buffer.writeUInt32LE(m, 8);
         for (var i=0, k=12; i<n; ++i) {
             for (var j=0; j<m; ++j, k+=4) {
-                buffer.writeUInt32LE(data[i].prices[j] * 1000, k);
+                price = Math.floor(1000 * (data[i].prices ? (data[i].prices[j] || 0) : 0));
+                if (price < 0 || price > 0xFFFFFFFF) price = 0;
+                buffer.writeUInt32LE(price, k);
             }
         }
         return buffer;

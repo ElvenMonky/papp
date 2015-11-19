@@ -25,11 +25,20 @@ var getRandom = function(min, max) {
     return 0.001 * Math.floor(1000 * Math.random() * (max - min)) + min;
 }
 
-var fillPetrols = function(result) {
+var fillPetrols = function(result, fuel_consumption, fuel_type) {
     var n = result.viapetrols.length;
     result.petrols = new Array(n);
-    for (var i=0; i<n; ++i)
+    result.costs = new Array(Math.max(0,n-1));
+    result.total_cost = 0;
+    var cost = 0;
+    for (var i=0; i<n; ++i) {
         result.petrols[i] = allPetrols[result.viapetrols[i]];
+        if (i > 0) {
+            result.costs[i-1] = Math.floor(result.lengths[i-1] * cost);
+            result.total_cost += result.costs[i-1];
+            cost = result.petrols[i].prices[fuel_type] * fuel_consumption;
+        }
+    }
 }
 
 module.exports.get = function(req, res) {
@@ -45,7 +54,7 @@ module.exports.get = function(req, res) {
         petrols_list[i] = +petrols_list[i];
     }
     osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, optimized, res, function(result) {
-        fillPetrols(result);
+        fillPetrols(result, fuel_consumption, fuel_type);
         return res.jsonp(result);
     });
 }
@@ -63,10 +72,10 @@ var testStep = function(q, data, i) {
                 '/'+full_tank+'/'+fuel_consumption+':'+fuel_type+':'+petrols.petrol_types[fuel_type]+')<'+time_cost+'>');
         data.push([petrols_list[0], petrols_list[1], initial_tank, full_tank, fuel_consumption, fuel_type, time_cost]);
         osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, false, undefined, function(result) {
-            fillPetrols(result);
+            fillPetrols(result, fuel_consumption, fuel_type);
             data.push(result);
             osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, true, undefined, function(result) {
-                fillPetrols(result);
+                fillPetrols(result, fuel_consumption, fuel_type);
                 data.push(result);
                 testStep(q, data, i-1);
             });
