@@ -10,7 +10,11 @@ module.exports.init = function(callback) {
         allPetrols = result;
         callback();
     });*/
-    callback();
+    path = './distance_table';
+    fs.readfile(undefined, path, fs.fullname('petrols_list.zip', path), function(filename, data) {
+        allPetrols = data;
+        callback();
+    });
 }
 
 var def = function(value, defvalue) {
@@ -19,6 +23,13 @@ var def = function(value, defvalue) {
 
 var getRandom = function(min, max) {
     return 0.001 * Math.floor(1000 * Math.random() * (max - min)) + min;
+}
+
+var fillPetrols = function(result) {
+    var n = result.viapetrols.length;
+    result.petrols = new Array(n);
+    for (var i=0; i<n; ++i)
+        result.petrols[i] = allPetrols[result.viapetrols[i]];
 }
 
 module.exports.get = function(req, res) {
@@ -34,13 +45,14 @@ module.exports.get = function(req, res) {
         petrols_list[i] = +petrols_list[i];
     }
     osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, optimized, res, function(result) {
+        fillPetrols(result);
         return res.jsonp(result);
     });
 }
 
 var testStep = function(q, data, i) {
     if (i > 0) {
-        var n = 625;//allPetrols.length;
+        var n = allPetrols.length;
         var full_tank = def(q.full_tank, getRandom(5, 60));
         var initial_tank = def(q.initial_tank, getRandom(1, full_tank));
         var fuel_consumption = def(q.fuel_consumption, getRandom(0.04, 0.3));
@@ -51,8 +63,10 @@ var testStep = function(q, data, i) {
                 '/'+full_tank+'/'+fuel_consumption+':'+fuel_type+':'+petrols.petrol_types[fuel_type]+')<'+time_cost+'>');
         data.push([petrols_list[0], petrols_list[1], initial_tank, full_tank, fuel_consumption, fuel_type, time_cost]);
         osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, false, undefined, function(result) {
+            fillPetrols(result);
             data.push(result);
             osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, true, undefined, function(result) {
+                fillPetrols(result);
                 data.push(result);
                 testStep(q, data, i-1);
             });
