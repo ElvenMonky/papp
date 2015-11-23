@@ -183,15 +183,15 @@ module.exports = {
                 for (var i=0; i<threads;++i) {
                     counter.callback(counter.queue.pop());
                 }
-                res.jsonp('Calculations started');
             });
+            res.jsonp('Calculations started');
         });
     },
 
     status: function(req, res) {
         var i = counter.filenames.length - 1;
-        var finished = i < counter.n ? Date.now() : counter.finished;
-        res.jsonp({'Progress': ''+i+'/'+counter.n, 'Duration': finished - counter.started });
+        var finished = i < 2 * counter.n ? Date.now() : counter.finished;
+        res.jsonp({'Progress': ''+i+'/'+(2*counter.n), 'Duration': finished - counter.started });
     },
 
     convert: function(req, res) {

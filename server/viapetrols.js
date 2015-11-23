@@ -10,11 +10,16 @@ module.exports.init = function(callback) {
         allPetrols = result;
         callback();
     });*/
-    path = './distance_table';
-    fs.readfile(undefined, path, fs.fullname('petrols_list.zip', path), function(filename, data) {
-        allPetrols = data;
+    var path = './distance_table';
+    var archivename = fs.fullname('petrols_list.zip', path);
+    if (fs.exists(archivename)) {
+        fs.readfile(undefined, path, archivename, function(filename, data) {
+            allPetrols = data;
+            callback();
+        });
+    } else {
         callback();
-    });
+    }
 }
 
 var def = function(value, defvalue) {

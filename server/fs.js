@@ -6,6 +6,10 @@ var ziptask = new zip();
 var def_path =  '/tmp/node-osrm-petrolapp';
 
 module.exports = {
+    exists: function(filename) {
+        return fs.existsSync(filename);
+    },
+
     fullname: function(filename, path) {
         var path = path || def_path;
         if (!fs.existsSync(path))
