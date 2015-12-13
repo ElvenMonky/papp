@@ -66,6 +66,8 @@ module.exports.get = function(req, res) {
 
 var testStep = function(q, data, i) {
     if (i > 0) {
+        var arr1 = [];
+        var arr2 = [];
         var n = allPetrols.length;
         var full_tank = def(q.full_tank, getRandom(5, 60));
         var initial_tank = def(q.initial_tank, getRandom(1, full_tank));
@@ -75,14 +77,19 @@ var testStep = function(q, data, i) {
         var petrols_list = [Math.floor(getRandom(0, n)), Math.floor(getRandom(0, n))];
         utils.log('Test '+i+' ['+petrols_list[0]+'->'+petrols_list[1]+']('+initial_tank+
                 '/'+full_tank+'/'+fuel_consumption+':'+fuel_type+':'+petrols.petrol_types[fuel_type]+')<'+time_cost+'>');
-        data.push([petrols_list[0], petrols_list[1], initial_tank, full_tank, fuel_consumption, fuel_type, time_cost]);
+        data.push([i, petrols_list[0], petrols_list[1], initial_tank, full_tank, fuel_consumption, fuel_type, time_cost]);
         osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, false, undefined, function(result) {
+            arr1 = result.viapetrols;
             fillPetrols(result, fuel_consumption, fuel_type);
             data.push(result);
             osrm.viapetrols(petrols_list, initial_tank, full_tank, fuel_consumption, fuel_type, time_cost, true, undefined, function(result) {
-                fillPetrols(result, fuel_consumption, fuel_type);
-                data.push(result);
-                testStep(q, data, i-1);
+                arr2 = result.viapetrols;
+                if (JSON.stringify(arr1) == JSON.stringify(arr2)) {
+                    testStep(q, data, i-1);
+                } else {
+                    data.push("Failed");
+                    testStep(q, data, 0);
+                }
             });
         });
     } else {
