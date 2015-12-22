@@ -68,7 +68,10 @@ module.exports.allPetrols = function(req, res, callback) {
     var started = utils.start('Querying mongodb');
     var query = {};
     if (req.query._id !== undefined) query._id = req.query._id;
-    Model.find(query).select('loc name petrols').lean().exec(function(err, result){
+    var obj = Model.find(query).select('loc name petrols');
+    if (req.query.limit)
+        obj.limit(req.query.limit);
+    obj.lean().exec(function(err, result){
         utils.finish('Queried', started);
         if (err) return utils.error(res, err.message);
         utils.log('Total petrols found: ' + result.length);
