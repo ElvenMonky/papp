@@ -31,8 +31,15 @@ var viaroute = function(req, res, p) {
     var fuel = q.fuel == "Diesel" ? 0 : 1;
     osrm.viapetrols(p, q.initialtank, q.fulltank, q.consumption, fuel, 0, true, res, function(result) {
         fillPetrols(result, q.consumption, fuel);
+        utils.log('Petrols route found: '+JSON.stringify(result));
+        var n = result.petrols.length;
+        req.query.loc = new Array(n);
+        for (var i=0; i<n; ++i) {
+            var s = result.petrols[i].loc.coordinates;
+            req.query.loc[i] = [+s[1],+s[0]];
+        }
         osrm.viaroute(req, res);
-        return res.jsonp(result);
+        //return res.jsonp(result);
     });
 }
 
