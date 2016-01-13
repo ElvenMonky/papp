@@ -15,7 +15,7 @@ app.set('jsonp callback name', 'jsonp');
 app.get('/', osrm.process);
 app.use('/web', express.static('osrm-frontend-petrolapp/WebContent'));
 app.get('/timestamp', osrm.timestamp);
-app.get('/viaroute', osrm.viaroute);
+app.get('/viaroute', viapetrols.viaroute);
 app.get('/table/query', table.query);
 app.get('/table/status', table.status);
 app.get('/table/convert', table.convert);

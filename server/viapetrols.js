@@ -4,6 +4,7 @@ var utils = require('./utils');
 var fs = require('./fs');
 
 var allPetrols = [];
+var lookup = {};
 
 module.exports.init = function(callback) {
     /*petrols.allPetrols({query:{}}, undefined, function(result) {
@@ -15,10 +16,47 @@ module.exports.init = function(callback) {
     if (fs.exists(archivename)) {
         fs.readfile(undefined, path, archivename, function(filename, data) {
             allPetrols = data;
+            for (var i=0; i<allPetrols.length; ++i) {
+                lookup[allPetrols[i].id] = i;
+            }
             callback();
         });
     } else {
         callback();
+    }
+}
+
+var viaroute = function(req, res, p) {
+    var q = req.query;
+    var fuel = q.fuel == "Diesel" ? 0 : 1;
+    osrm.viapetrols(p, q.initialtank, q.fulltank, q.consumption, fuel, 0, true, res, function(result) {
+        fillPetrols(result, q.consumption, fuel);
+        osrm.viaroute(req, res);
+        return res.jsonp(result);
+    });
+}
+
+module.exports.viaroute = function(req, res) {
+    if (!req.query.consumption) {
+        utils.log('old viaroute started');
+        osrm.viaroute(req, res);
+    } else {
+        utils.log('new viaroute started');
+        var r = {query: {limit: 1}};
+        var n = req.query.loc.length;
+        var p = new Array(n);
+        var c = 0;
+        for (var i=0; i<n; ++i) {
+            r.query.loc = req.query.loc[i];
+            petrols.geoNear(r, res, function(i) { return function(result) {
+                utils.log('nearest petrol found: '+JSON.stringify(result[0].obj));
+                p[i] = lookup[result[0].obj._id];
+                utils.log('nearest petrol found: '+i+'->'+p[i]);
+                if (++c == n) {
+                    viaroute(req, res, p);
+                }
+            }}(i));
+        }
     }
 }
 
