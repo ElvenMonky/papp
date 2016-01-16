@@ -63,6 +63,7 @@ module.exports.viaroute = function(req, res) {
         for (var i=0; i<n; ++i) {
             r.query.loc = req.query.loc[i];
             petrols.geoNear(r, res, function(i) { return function(result) {
+                if (result[0] === undefined) utils.error(res, "No petrols close to location");
                 utils.log('nearest petrol found: '+JSON.stringify(result[0].obj));
                 p[i] = lookup[result[0].obj._id];
                 utils.log('nearest petrol found: '+i+'->'+p[i]);
