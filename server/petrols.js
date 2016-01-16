@@ -35,6 +35,15 @@ var getPetrols = function(result, fuel) {
     return petrols;
 }
 
+module.exports.getPetrolsEx = function(result, fuel) {
+    var n = result.length;
+    var petrols = new Array();
+    for (var i=0; i<n; ++i) {
+        petrols.push({'loc': result[i].loc, 'name': result[i].id, 'price': result[i].prices[fuel]});
+    }
+    return petrols;
+}
+
 module.exports.process = function(res, region, route, query) {
     var started = utils.start('Querying mongodb');
     Model.where('loc').within().geometry(region).select('loc name petrols').lean().exec(function(err,result){
