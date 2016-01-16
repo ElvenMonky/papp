@@ -29,20 +29,34 @@ module.exports.init = function(callback) {
 var viaroute = function(req, res, p) {
     var q = req.query;
     var fuel = q.fuel == "Diesel" ? 0 : 1;
-    osrm.viapetrols(p, q.initialtank, q.fulltank, q.consumption, fuel, 0, true, res, function(result) {
+    osrm.viapetrols(p, q.initialtank, q.fulltank, q.consumption, fuel, q.timecost, true, res, function(result) {
         fillPetrols(result, q.consumption, fuel);
-        osrm.viaroute(req, res);
-        return res.jsonp(result);
+        utils.log('Petrols route found: '+JSON.stringify(result));
+        var res_petrols = result.petrols;
+        var n = res_petrols.length;
+        for (var i=0; i<n; ++i) {
+            var s = res_petrols[i].loc.coordinates;
+            req.query.loc.splice(i+1,0, ''+s[1]+','+s[0]);
+        }
+        utils.log('Route request:'+JSON.stringify(req.query));
+        osrm.viaroute_old(req, res, function(result) {
+            result.markers = petrols.getPetrolsEx(res_petrols, fuel);
+            result.via_indices.splice(1, result.via_indices.length-2);
+            result.via_points.splice(1, result.via_points.length-2);
+            utils.log('Route result:'+JSON.stringify(result));
+            return res.jsonp(result);
+        });
     });
 }
 
 module.exports.viaroute = function(req, res) {
-    if (!req.query.consumption) {
+    if (!req.query.petrols_table) {
         utils.log('old viaroute started');
         osrm.viaroute(req, res);
     } else {
         utils.log('new viaroute started');
         var r = {query: {limit: 1}};
+        req.query.loc.splice(1, req.query.loc.length-2);
         var n = req.query.loc.length;
         var p = new Array(n);
         var c = 0;
@@ -53,7 +67,7 @@ module.exports.viaroute = function(req, res) {
                 p[i] = lookup[result[0].obj._id];
                 utils.log('nearest petrol found: '+i+'->'+p[i]);
                 if (++c == n) {
-                    viaroute(req, res, p);
+                    return viaroute(req, res, p);
                 }
             }}(i));
         }
