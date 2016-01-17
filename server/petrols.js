@@ -36,10 +36,17 @@ var getPetrols = function(result, fuel) {
 }
 
 module.exports.getPetrolsEx = function(result, fuel) {
-    var n = result.length;
+    var n = result.petrols.length;
     var petrols = new Array();
+    var total = { 'time': 0, 'length': 0, 'cost': 0 };
     for (var i=0; i<n; ++i) {
-        petrols.push({'loc': result[i].loc, 'name': result[i].id, 'price': result[i].prices[fuel]});
+        petrols.push({'loc': result.petrols[i].loc, 'name': result.petrols[i].id, 'price': result.petrols[i].prices[fuel],
+                    'time': total.time, 'length': total.length, 'cost': total.cost});
+        if (i < n-1) {
+            total.time += result.times[i];
+            total.length += result.lengths[i];
+            total.cost += result.costs[i];
+        }
     }
     return petrols;
 }
@@ -98,7 +105,7 @@ module.exports.geoNear = function(req, res, callback) {
     var started = utils.start('Querying mongodb');
     var s = req.query.loc.split(',');
     var point = {type: "Point", coordinates: [+s[1],+s[0]]};
-    var options = {maxDistance: +(req.query.distance || 10000), spherical: true, lean: true, limit: +(req.query.limit || 10000)};
+    var options = {maxDistance: +(req.query.distance || 100000), spherical: true, lean: true, limit: +(req.query.limit || 10000)};
     //var m2d = 0.000000157;
     //var shape = {center: [+s[0],+s[1]], radius: +req.query.distance, spherical: true};
     Model.geoNear(point, options, function(err, result){

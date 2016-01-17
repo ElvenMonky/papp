@@ -29,18 +29,17 @@ module.exports.init = function(callback) {
 var viaroute = function(req, res, p) {
     var q = req.query;
     var fuel = q.fuel == "Diesel" ? 0 : 1;
-    osrm.viapetrols(p, q.initialtank, q.fulltank, q.consumption, fuel, q.timecost, true, res, function(result) {
-        fillPetrols(result, q.consumption, fuel);
-        utils.log('Petrols route found: '+JSON.stringify(result));
-        var res_petrols = result.petrols;
-        var n = res_petrols.length;
+    osrm.viapetrols(p, q.initialtank, q.fulltank, q.consumption, fuel, q.timecost, true, res, function(r) {
+        fillPetrols(r, q.consumption, fuel);
+        utils.log('Petrols route found: '+JSON.stringify(r));
+        var n = r.petrols.length;
         for (var i=0; i<n; ++i) {
-            var s = res_petrols[i].loc.coordinates;
+            var s = r.petrols[i].loc.coordinates;
             req.query.loc.splice(i+1,0, ''+s[1]+','+s[0]);
         }
         utils.log('Route request:'+JSON.stringify(req.query));
         osrm.viaroute_old(req, res, function(result) {
-            result.markers = petrols.getPetrolsEx(res_petrols, fuel);
+            result.markers = petrols.getPetrolsEx(r, fuel);
             result.via_indices.splice(1, result.via_indices.length-2);
             result.via_points.splice(1, result.via_points.length-2);
             utils.log('Route result:'+JSON.stringify(result));
@@ -57,13 +56,13 @@ module.exports.viaroute = function(req, res) {
         utils.log('new viaroute started');
         var r = {query: {limit: 1}};
         req.query.loc.splice(1, req.query.loc.length-2);
-        var n = req.query.loc.length;
+        var n = req.query.loc.length;//2
         var p = new Array(n);
         var c = 0;
         for (var i=0; i<n; ++i) {
             r.query.loc = req.query.loc[i];
             petrols.geoNear(r, res, function(i) { return function(result) {
-                if (result[0] === undefined) utils.error(res, "No petrols close to location");
+                if (result[0] === undefined) return utils.error(undefined, "No petrols close to location");
                 utils.log('nearest petrol found: '+JSON.stringify(result[0].obj));
                 p[i] = lookup[result[0].obj._id];
                 utils.log('nearest petrol found: '+i+'->'+p[i]);
