@@ -38,12 +38,12 @@ var viaroute = function(req, res, p) {
             req.query.loc.splice(i+1,0, ''+s[1]+','+s[0]);
         }
         utils.log('Route request:'+JSON.stringify(req.query));
-        osrm.viaroute_old(req, res, function(result) {
-            result.markers = petrols.getPetrolsEx(r, fuel);
+        osrm.viaroute(req, res, function(result) {
+            result.viamarkers = petrols.getPetrolsEx(r, fuel);
             result.via_indices.splice(1, result.via_indices.length-2);
             result.via_points.splice(1, result.via_points.length-2);
             utils.log('Route result:'+JSON.stringify(result));
-            return res.jsonp(result);
+            return result;
         });
     });
 }
@@ -51,7 +51,7 @@ var viaroute = function(req, res, p) {
 module.exports.viaroute = function(req, res) {
     if (!req.query.petrols_table) {
         utils.log('old viaroute started');
-        osrm.viaroute(req, res);
+        osrm.viaroute(req, res, function(result) { res.jsonp(result); return; });
     } else {
         utils.log('new viaroute started');
         var r = {query: {limit: 1}};

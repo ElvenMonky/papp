@@ -16,12 +16,14 @@ var viaroute = function(req, res, query, web) {
         //utils.log(result);
         if (err) return utils.error(res, err.message);
         var noroute = result.route_geometry === undefined || result.route_instructions === undefined;
-        if (web instanceof Function)
-            return web(result);
         if (!web && noroute)
             return utils.error(res, 'No route found');
         if (web && (!query.geometry || !query.printInstructions || noroute))
             return res.jsonp(result);
+        if (web instanceof Function) {
+            result = web(result);
+            if (!result) return;
+        }
         geometry.process(res, result, params);
     });
 }
@@ -49,7 +51,7 @@ module.exports = {
         viaroute(req, res, query, false);
     },
 
-    viaroute_old: function(req, res, callback) {
+    viaroute: function(req, res, callback) {
         var coords = req.query.loc;
         var s;
         if (!Array.isArray(coords)) coords = [coords];
@@ -66,25 +68,6 @@ module.exports = {
             jsonpParameter: req.query.jsonp
         };
         viaroute(req, res, query, callback);
-    },
-
-    viaroute: function(req, res) {
-        var coords = req.query.loc;
-        var s;
-        if (!Array.isArray(coords)) coords = [coords];
-        for (var i = 0; i < coords.length; ++i) {
-            s = coords[i].split(',');
-            coords[i] = [+s[0],+s[1]];
-        }
-        var query = {
-            coordinates: coords,
-            alternateRoute: req.query.alt === 'true',
-            geometry: req.query.geometry !== 'false',
-            printInstructions: req.query.instructions === 'true',
-            zoomLevel: +req.query.z,
-            jsonpParameter: req.query.jsonp
-        };
-        viaroute(req, res, query, true);
     },
 
     timestamp: function(req, res) {
