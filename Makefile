@@ -65,7 +65,7 @@ test: ./map/map.osrm.hsgr
 	./node_modules/.bin/mocha -R spec
 
 install:
-	sed -i -e "s@<petrolapp-directory>@${PWD}@g" ./node-osrm-petrolapp.conf
-	sudo cp node-osrm-petrolapp.conf /etc/init
+	sed -e "s@<petrolapp-directory>@${PWD}@g" -e "s@<current-user>@${USER}@g" ./node-osrm-petrolapp.conf > ./node-osrm-petrolapp.conf.tmp
+	sudo mv ./node-osrm-petrolapp.conf.tmp /etc/init/node-osrm-petrolapp.conf
 
 .PHONY: test clean build
