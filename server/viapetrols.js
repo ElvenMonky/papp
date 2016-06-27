@@ -28,7 +28,7 @@ module.exports.init = function(callback) {
 
 var viaroute = function(req, res, p) {
     var q = req.query;
-    var fuel = q.fuel == "Diesel" ? 0 : 1;
+    var fuel = +q.fuel;
     osrm.viapetrols(p, q.initialtank, q.fulltank, q.consumption, fuel, q.timecost, true, res, function(r) {
         fillPetrols(r, q.consumption, fuel);
         utils.log('Petrols route found: '+JSON.stringify(r));

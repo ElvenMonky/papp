@@ -7,7 +7,7 @@ var osrm;
 var viaroute = function(req, res, query, web) {
     var params = {
         indent: +(req.query.indent || 500),
-        fuel: req.query.fuel || 'Super 95',
+        fuel: req.query.fuel || "0",
         web: web
     };
     var started = utils.start('Querying route');

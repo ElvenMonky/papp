@@ -13,13 +13,13 @@ module.exports.init = function(callback) {
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', function(){
         var schema = new Schema({}, { strict: false });
-        Model = mongoose.model('stations', schema, 'stations');
+        Model = mongoose.model('new_stations', schema, 'new_stations');
         utils.finish('Mongo database connected', started);
         callback();
     });
 }
 
-module.exports.petrol_types = ['Diesel', 'Super 95'];
+module.exports.petrol_types = ['benzin A95', 'DSL(diesel)', 'LPG', 'E10', 'A98+', 'DSL+', 'Electricity', 'Ethanol', 'Biodiesel', 'Methane', 'other'];
 
 var getPetrols = function(result, fuel) {
     var n = result.length;
@@ -28,7 +28,7 @@ var getPetrols = function(result, fuel) {
         var price = 0;
         var sub = result[i].petrols;
         for (var j=0; j < sub.length; ++j)
-            if (sub[j].name.trim() == fuel) { price = sub[j].price; break; }
+            if (sub[j].name.trim() == module.exports.petrol_types[+fuel]) { price = sub[j].price; break; }
         if (price > 0)
             petrols.push({'loc': result[i].loc, 'name': result[i].name, 'price': price});
     }

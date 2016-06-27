@@ -128,6 +128,31 @@ var querytable = {
 }
 
 module.exports = {
+    querylist: function(req, res) {
+        var method = req.query.loc ? petrols.geoNear : petrols.allPetrols;
+        method(req, res, function(result) {
+            var n = result.length;
+            if (n < 2) return utils.error(res, 'only '+n+' petrols found');
+            var petrols_list = new Array(n);
+            for (var i=0; i < n; ++i) {
+                var obj = result[i].obj || result[i];
+                var arr = new Array(petrols.petrol_types.length);
+                for (var j=0; j<arr.length; ++j) {
+                    arr[j] = 0;
+                    for (var k=0; k<obj.petrols.length; ++k)
+                        if (petrols.petrol_types[j] == obj.petrols[k].name) {
+                            arr[j] = obj.petrols[k].price;
+                            break;
+                        }
+                }
+                petrols_list[i] = { 'id': obj._id, 'loc': obj.loc, 'prices': arr};
+            }
+            var filename = fs.fullname('petrols_list.json');
+            fs.writefile(res, filename, petrols_list, function() {});
+            res.jsonp('New petrols list created');
+        });
+    },
+
     query: function(req, res) {
         var i = counter.filenames.length - 1;
         if (i < counter.n) return res.jsonp('Already started');
@@ -179,7 +204,7 @@ module.exports = {
                         counter.queue.push({i: i, j: j});
                     }
                 }
-                var threads = req.query.threads || 4;
+                var threads = 8;
                 for (var i=0; i<threads;++i) {
                     counter.callback(counter.queue.pop());
                 }
@@ -192,6 +217,28 @@ module.exports = {
         var i = counter.filenames.length - 1;
         var finished = i < 2 * counter.n ? Date.now() : counter.finished;
         res.jsonp({'Progress': ''+i+'/'+(2*counter.n), 'Duration': finished - counter.started });
+    },
+
+    convertlist: function(req, res) {
+        var path = './distance_table';
+        var fn = 'petrols_list.zip';
+        var bin_path = path+'_bin';
+        utils.log('Convering petrols list to binary format');
+        var partsize = 1000;
+        var queue = async.queue(function(archivename, callback) {
+            fs.readfile(undefined, path, fs.fullname(archivename, path), function(filename, data) {
+                var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
+                fs.writefileraw(undefined, binfilename, querytable.summary(data, partsize), function() {
+                    utils.log('Written: '+binfilename);
+                    callback();
+                });
+            });
+        }, 1);
+        queue.drain = function() {
+            utils.log('Convertion finished');
+        }
+        queue.push([fn]);
+        res.jsonp('Calculations started');
     },
 
     convert: function(req, res) {
