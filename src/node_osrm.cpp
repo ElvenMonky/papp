@@ -12,6 +12,7 @@
 // STL
 #include <iostream>
 #include <memory>
+#include <stdlib.h>
 
 namespace node_osrm {
 
@@ -55,6 +56,18 @@ private:
 Persistent<FunctionTemplate> Engine::constructor;
 
 void Engine::Initialize(Handle<Object> target) {
+
+    int numCPU = sysconf( _SC_NPROCESSORS_ONLN ); // cpu's count
+    std::string s = std::to_string(numCPU);
+    char const *cpuString = s.c_str();
+
+    int len = strlen("UV_THREADPOOL_SIZE") + 1 + std::strlen(cpuString) + 1;
+// The string parameter of putenv() becomes part of the environment,
+// so it must be allocated memory from the heap.
+    char *pair = (char*) malloc(len);
+    std::sprintf(pair, "%s=%s", "UV_THREADPOOL_SIZE", cpuString);
+    putenv(pair); //setting environment variable
+
     NanScope();
     Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(Engine::New);
     lcons->InstanceTemplate()->SetInternalFieldCount(1);
