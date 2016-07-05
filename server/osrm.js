@@ -34,9 +34,9 @@ module.exports = {
         var params = {
             indent: +(req.query.indent || 500),
             fuel: req.query.fuel || "0",
-            web: web
+            web: false
         };
-        geometry.process(res, req.query.geometry, params);
+        geometry.process(res, req.query.route, params);
     },
 
     // Accepts a query like:
