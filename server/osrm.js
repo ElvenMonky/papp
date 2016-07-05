@@ -30,13 +30,13 @@ module.exports = {
         utils.finish('Loading complete', started);
     },
     
-    along: function(req, res) {
+    along: function(req, res, result) {
         var params = {
             indent: +(req.query.indent || 500),
             fuel: req.query.fuel || "0",
-            web: false
+            web: true
         };
-        geometry.process(res, req.query.route, params);
+        geometry.process(res, result, params);
     },
 
     // Accepts a query like:
