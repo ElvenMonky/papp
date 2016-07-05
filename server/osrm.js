@@ -5,11 +5,6 @@ var utils = require('./utils');
 var osrm;
 
 var viaroute = function(req, res, query, web) {
-    var params = {
-        indent: +(req.query.indent || 500),
-        fuel: req.query.fuel || "0",
-        web: web
-    };
     var started = utils.start('Querying route');
     osrm.route(query, function(err, result) {
         utils.finish('Queried', started);
@@ -24,7 +19,7 @@ var viaroute = function(req, res, query, web) {
             result = web(result);
             if (!result) return;
         }
-        geometry.process(res, result, params);
+        return res.jsonp(result);
     });
 }
 
@@ -33,6 +28,15 @@ module.exports = {
         var started = utils.start('Loading map');
         osrm = new OSRM({path: './map/map.osrm', petrols_path: './distance_table_bin', distance_table:10000/*, shared: true*/});
         utils.finish('Loading complete', started);
+    },
+    
+    along: function(req, res) {
+        var params = {
+            indent: +(req.query.indent || 500),
+            fuel: req.query.fuel || "0",
+            web: web
+        };
+        geometry.process(res, req.query.geometry, params);
     },
 
     // Accepts a query like:
