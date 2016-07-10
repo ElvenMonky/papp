@@ -25,7 +25,6 @@ app.get('/table/pack', table.pack);
 app.get('/table/get', fs.get);
 app.get('/petrols/get', petrols.get);
 app.get('/petrols/near', petrols.near);
-app.get('/petrols/along', osrm.along);
 app.get('/viapetrols', viapetrols.get);
 app.get('/viapetrols/test', viapetrols.test);
 

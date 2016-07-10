@@ -8,20 +8,34 @@ var viaroute = function(req, res, query, web) {
     var started = utils.start('Querying route');
     osrm.route(query, function(err, result) {
         utils.finish('Queried', started);
-        //utils.log(result);
         if (err) return utils.error(res, err.message);
         var noroute = result.route_geometry === undefined || result.route_instructions === undefined;
         if (!web && noroute)
             return utils.error(res, 'No route found');
+	if (query.getStationsInfo === true)
+	  along(req, res, result);
+	else {
         if (web && (!query.geometry || !query.printInstructions || noroute))
             return res.jsonp(result);
         if (web instanceof Function) {
             result = web(result);
             if (!result) return;
         }
+
         return res.jsonp(result);
+	}
     });
 }
+
+var along = function(req, res, result) {
+      utils.log("along along along along along");
+        var params = {
+            indent: +(req.query.indent || 500),
+            fuel: req.query.fuel || "0",
+            web: true
+        };
+        geometry.process(res, result, params);
+    }
 
 module.exports = {
     init: function() {
@@ -30,15 +44,6 @@ module.exports = {
         utils.finish('Loading complete', started);
     },
     
-    along: function(req, res, result) {
-        var params = {
-            indent: +(req.query.indent || 500),
-            fuel: req.query.fuel || "0",
-            web: true
-        };
-        geometry.process(res, result, params);
-    },
-
     // Accepts a query like:
     // http://localhost:8888?start=50.519930,5.438640&end=50.513191,5.415852
     process: function(req, res) {
@@ -50,13 +55,14 @@ module.exports = {
         var query = {
             coordinates: coordinates,
             alternateRoute: req.query.alternatives === 'true',
-            printInstructions: true
+            printInstructions: true,	    
         };
         viaroute(req, res, query, false);
     },
 
     viaroute: function(req, res, callback) {
-        var coords = req.query.loc;
+        var coords = req.query.loc;	
+	utils.log(JSON.stringify(req.query));
         var s;
         if (!Array.isArray(coords)) coords = [coords];
         for (var i = 0; i < coords.length; ++i) {
@@ -69,7 +75,8 @@ module.exports = {
             geometry: req.query.geometry !== 'false',
             printInstructions: req.query.instructions === 'true',
             zoomLevel: +req.query.z,
-            jsonpParameter: req.query.jsonp
+            jsonpParameter: req.query.jsonp,
+            getStationsInfo: req.query.stationsInfo === 'true'
         };
         viaroute(req, res, query, callback);
     },
