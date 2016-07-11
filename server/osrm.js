@@ -28,7 +28,6 @@ var viaroute = function(req, res, query, web) {
 }
 
 var along = function(req, res, result) {
-      utils.log("along along along along along");
         var params = {
             indent: +(req.query.indent || 500),
             fuel: req.query.fuel || "0",
