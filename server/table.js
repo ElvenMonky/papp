@@ -14,6 +14,72 @@ var fillcoords = function(coords, petrols, d, b, e) {
     }
 }
 
+var sort = function(stations, callback) {
+  dict_long = {};
+  for (var i=0; i<stations.length; ++i) {
+    var obj = stations[i].obj || stations[i];
+    
+    lon_index = Math.round(parseFloat(JSON.stringify(obj.loc.coordinates).split(',')[0].replace('[', '').replace(']', ''))*100);
+    lat_index = Math.round(parseFloat(JSON.stringify(obj.loc.coordinates).split(',')[1].replace('[', '').replace(']', ''))*100);
+    
+    dict_lat = dict_long[lon_index];
+    if (dict_lat === undefined)
+      dict_lat = {};
+    arr_stat = dict_lat[lat_index];
+    if (arr_stat === undefined)
+      arr_stat = [];
+    
+    arr_stat.push(obj);
+    dict_lat[lat_index] = arr_stat 
+    dict_long[lon_index] = dict_lat
+  }
+  var sorted_stations = [];
+  while (Object.keys(dict_long)[0] != undefined)
+  {
+    var count = 0
+    var indent = 0
+    var lon_indexes = Object.keys(dict_long);
+    lon_index = Number(lon_indexes[0])
+    var lat_indexes = Object.keys(dict_long[lon_indexes[0]]);
+    lat_index = Number(lat_indexes[0])
+    
+    while (count < 1000)
+    {
+      indent += 1;
+      for (i = lon_index - indent; i <= lon_index + indent; i++)
+      {
+	if (count >= 1000)
+	  break;
+	if (dict_long[i] === undefined)
+	    continue;
+	for (j = (lat_index - indent); j <= (lat_index + indent); j++)
+	{	  
+	    
+	  if (count >= 1000 || dict_long[i] === undefined )
+	    break;
+	  if (dict_long[i][j] === undefined)
+	    continue;
+
+	  while (dict_long[i][j].length > 0)
+	  {
+	    sorted_stations.push(dict_long[i][j].pop());
+	    count++;
+	    if (dict_long[i][j].length == 0)
+	    {
+	      delete dict_long[i][j];
+	      if (Object.keys(dict_long[i])[0] === undefined)
+		delete dict_long[i];
+	    }
+	    if (count >= 1000 || dict_long[i] === undefined || dict_long[i][j] === undefined)
+	      break;
+	  }
+	}
+      }
+    } 
+  }
+  callback(sorted_stations)  
+}
+
 
 var querytable = {
     summary: function(data, partsize) {
@@ -158,11 +224,13 @@ module.exports = {
         if (i < counter.n) return res.jsonp('Already started');
         var method = req.query.loc ? petrols.geoNear : petrols.allPetrols;
         method(req, res, function(result) {
-            var n = result.length;
+	    sort(result, function(result) {
+            var n = result.length;	    
             if (n < 2) return utils.error(res, 'only '+n+' petrols found');
             var petrols_list = new Array(n);
             for (var i=0; i < n; ++i) {
                 var obj = result[i].obj || result[i];
+		
                 var arr = new Array(petrols.petrol_types.length);
                 for (var j=0; j<arr.length; ++j) {
                     arr[j] = 0;
@@ -210,7 +278,7 @@ module.exports = {
                 }
             });
             res.jsonp('Calculations started');
-        });
+        })});
     },
 
     status: function(req, res) {
