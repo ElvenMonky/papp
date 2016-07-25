@@ -104,6 +104,7 @@ var querytable = {
         var n = data.length;
         var m = data[0].length;
         var buffer = new Buffer(n * m * 4);
+
         for (var i=0, k=0; i<n; ++i) {
             for (var j=0; j<m; ++j, k+=4) {
                 if (0 <= data[i][j] && data[i][j] < 0xFFFFFFFF) {
@@ -114,7 +115,80 @@ var querytable = {
                 }
             }
         }
+
         return buffer;
+    },
+    timeBuffer: function(distanceData, lengthData) {
+      var n = lengthData.length;
+      var m = lengthData[0].length;
+
+      minv = 0xFFFFFFFF;
+      maxv = 0;
+      for (var i=0; i<n; ++i) {
+	for (var j=0; j<m; ++j) {
+	  if (lengthData[i][j] > 0)
+	  {
+	    v = distanceData[i][j]/lengthData[i][j];
+	    if (maxv < v)
+	      maxv = v;
+	    if (minv > v)
+	      minv = v;
+	  }
+	}
+      }
+      var buffer = new Buffer((n*m*2) + 16);
+      buffer.writeDoubleLE(minv, 0);
+      buffer.writeDoubleLE((maxv-minv), 8);
+      for (var i=0, k=16; i<n; ++i) {
+	for (var j=0; j<m; ++j, k+=1) {
+	  if (0 <= lengthData[i][j] && lengthData[i][j] < 0xFFFFFFFF) {
+	    if (lengthData[i][j] > 0){
+	      var v = distanceData[i][j]/lengthData[i][j]
+	      var normalizedTime = Math.floor(0xFFFF*(v - minv)/(maxv-minv));
+
+	      buffer.writeUInt16LE(normalizedTime, k);
+	    } else
+	    buffer.writeUInt16LE(0, k);
+	  } else {
+	    buffer.writeUInt16LE(0, k);
+	    utils.log('Value out of range['+i+','+j+']: '+lengthData[i][j]);
+	  }
+	}
+      }
+
+      return buffer;
+    },
+    distanceBuffer: function(distanceData, lengthData) {
+      var n = distanceData.length;
+      var m = distanceData[0].length;
+
+      var max = 0;
+      var min = 0xFFFFFFFF;
+      for (var i=0; i<n; ++i) {
+	for (var j=0; j<m; ++j) {
+	  l = distanceData[i][j];
+	  if (max < l)
+	    max = l;
+	  if (min > l)
+	    min = l;
+	}
+      }
+      var buffer = new Buffer(n * m * 2 + 16);
+      buffer.writeDoubleLE(min, 0);
+      buffer.writeDoubleLE((max-min), 8);
+      for (var i=0, k=16; i<n; ++i) {
+	for (var j=0; j<m; ++j, k+=2) {
+	  if (0 <= distanceData[i][j] && distanceData[i][j] < 0xFFFFFFFF) {
+	    normalizedDistance = Math.floor(0xFFFF*(distanceData[i][j] - min)/(max-min));
+
+	    buffer.writeUInt16LE(normalizedDistance, k);
+	  } else {
+	    buffer.writeUInt16LE(0, k);
+	    utils.log('Value out of range['+i+','+j+']: '+distanceData[i][j]);
+	  }
+	}
+      }
+      return buffer;
     },
 
     crop: function(table, i1, i2, j1, j2) {
@@ -313,19 +387,43 @@ module.exports = {
         var path = './distance_table';
         var bin_path = path+'_bin';
         var filenames = fs.listfiles(path);
+	var tempNames = [];
+	for (i = 0; i < filenames.length; i++)
+	{
+	  if (filenames[i].indexOf('length_table') == -1)
+	    tempNames.push(filenames[i]);
+	}
+	filenames = tempNames;
         utils.log('Convering '+filenames.length+' compressed json files to binary format');
         var threads = req.query.threads || 10;
         var partsize = 1000;
         var queue = async.queue(function(archivename, callback) {
+
             fs.readfile(undefined, path, fs.fullname(archivename, path), function(filename, data) {
                 var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
                 var summary = (archivename == 'petrols_list.zip');
-                if (archivename == 'distance_table0_0.zip') partsize = data.length;
-                fs.writefileraw(undefined, binfilename, summary ? querytable.summary(data, partsize) : querytable.buffer(data), function() {
+                if (archivename == 'distance_table0_0.zip')
+		  partsize = data.length;
+		if (summary)
+		  fs.writefileraw(undefined, binfilename, querytable.summary(data, partsize), function() {
                     utils.log('Written: '+binfilename);
-                    callback();
-                });
-            });
+                    callback(); })
+                else
+		{
+		  lengthName = filename.replace(/distance_table(?=\d)/, 'length_table');
+		  fs.readfile(undefined, path, fs.fullname(lengthName, path).replace(path+'/','').replace('.json','.zip'), function(filenameLength, lengthData) {
+		    var binfilenameLength = fs.fullname(filenameLength.replace('.json','.bin').replace(path+'/',''), bin_path);
+
+		    fs.writefileraw(undefined, binfilenameLength, querytable.timeBuffer(data, lengthData), function() {
+		      utils.log('Written: '+binfilename);
+		      fs.writefileraw(undefined, binfilename, querytable.distanceBuffer(data, lengthData), function() {
+			utils.log('Written: '+binfilenameLength);
+			callback();
+		      });
+		    });
+		  });
+		}
+	    });
         }, threads);
         queue.drain = function() {
             utils.log('Convertion finished');
@@ -333,6 +431,7 @@ module.exports = {
         queue.push(filenames);
         res.jsonp('Calculations started');
     },
+
 
     pack: function(req, res) {
         return fs.packall(counter, res);
