@@ -15,12 +15,13 @@ var fillcoords = function(coords, petrols, d, b, e) {
 }
 
 var sort = function(stations, callback) {
+  utils.log('sorting started');
   dict_long = {};
   for (var i=0; i<stations.length; ++i) {
     var obj = stations[i].obj || stations[i];
     
-    lon_index = Math.round(parseFloat(JSON.stringify(obj.loc.coordinates).split(',')[0].replace('[', '').replace(']', ''))*100);
-    lat_index = Math.round(parseFloat(JSON.stringify(obj.loc.coordinates).split(',')[1].replace('[', '').replace(']', ''))*100);
+    lon_index = Math.round(parseFloat(JSON.stringify(obj.loc.coordinates).split(',')[0].replace('[', '').replace(']', ''))*10);
+    lat_index = Math.round(parseFloat(JSON.stringify(obj.loc.coordinates).split(',')[1].replace('[', '').replace(']', ''))*10);
     
     dict_lat = dict_long[lon_index];
     if (dict_lat === undefined)
@@ -43,9 +44,14 @@ var sort = function(stations, callback) {
     var lat_indexes = Object.keys(dict_long[lon_indexes[0]]);
     lat_index = Number(lat_indexes[0])
     
+    if (sorted_stations.length%5000 == 0)
+      utils.log(sorted_stations.length +'/' + stations.length);
+
     while (count < 1000)
     {
       indent += 1;
+      if (Object.keys(dict_long)[0] === undefined)
+	 break;
       for (i = lon_index - indent; i <= lon_index + indent; i++)
       {
 	if (count >= 1000)
@@ -77,6 +83,7 @@ var sort = function(stations, callback) {
       }
     } 
   }
+  utils.log('sorting finished');
   callback(sorted_stations)  
 }
 
