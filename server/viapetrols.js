@@ -15,7 +15,7 @@ module.exports.init = function(callback) {
     var archivename = fs.fullname('petrols_list.zip', path);
     if (fs.exists(archivename)) {
         fs.readfile(undefined, path, archivename, function(filename, data) {
-            allPetrols = data;
+            allPetrols = data[1];
             for (var i=0; i<allPetrols.length; ++i) {
                 lookup[allPetrols[i].id] = i;
             }
