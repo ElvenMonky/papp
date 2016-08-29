@@ -58,7 +58,7 @@ var querytable = {
         var price = 0;
         var m = petrols.petrol_types.length;
         var partsSizes = data[0];
-        var buffer = new Buffer(4 * (data[1].length * m) + partsSizes.length*4 + 8);
+        var buffer = new Buffer(4 * (data[1].length * m) + partsSizes.length*4 + 8 + data[1].length*16);
         buffer.writeUInt32LE(partsSizes.length, 0);
         for (var i = 0; i < partsSizes.length; i++)
             buffer.writeUInt32LE(partsSizes[i], (i + 1)*4);
@@ -71,6 +71,14 @@ var querytable = {
                 buffer.writeUInt32LE(price, k);
             }
         }
+
+        for (var i = 0; i < data[1].length; i++)
+        {
+            buffer.writeDoubleLE(data[1][i].loc['coordinates'][0], k);
+            buffer.writeDoubleLE(data[1][i].loc['coordinates'][1], k+8);
+            k+=16;
+        }
+
         return buffer;
     },
 
@@ -390,28 +398,27 @@ module.exports = {
             fs.readfile(undefined, path, fs.fullname(archivename, path), function(filename, data) {
                 var binfilename = fs.fullname(filename.replace('.json','.bin').replace(path+'/',''), bin_path);
                 var summary = (archivename == 'petrols_list.zip');
-                if (archivename == 'distance_table0_0.zip')
 
-                    if (summary) {
-                        fs.writefileraw(undefined, binfilename, querytable.summary(data), function() {
+                if (summary) {
+                    fs.writefileraw(undefined, binfilename, querytable.summary(data), function() {
+                        utils.log('Written: '+binfilename);
+                        callback(); })
+                }
+                else
+                {
+                    lengthName = filename.replace(/distance_table(?=\d)/, 'length_table');
+                    fs.readfile(undefined, path, fs.fullname(lengthName, path).replace(path+'/','').replace('.json','.zip'), function(filenameLength, lengthData) {
+                        var binfilenameLength = fs.fullname(filenameLength.replace('.json','.bin').replace(path+'/',''), bin_path);
+
+                        fs.writefileraw(undefined, binfilenameLength, querytable.timeBuffer(data, lengthData), function() {
                             utils.log('Written: '+binfilename);
-                            callback(); })
-                    }
-                    else
-                    {
-                        lengthName = filename.replace(/distance_table(?=\d)/, 'length_table');
-                        fs.readfile(undefined, path, fs.fullname(lengthName, path).replace(path+'/','').replace('.json','.zip'), function(filenameLength, lengthData) {
-                            var binfilenameLength = fs.fullname(filenameLength.replace('.json','.bin').replace(path+'/',''), bin_path);
-                            
-                            fs.writefileraw(undefined, binfilenameLength, querytable.timeBuffer(data, lengthData), function() {
-                                utils.log('Written: '+binfilename);
-                                fs.writefileraw(undefined, binfilename, querytable.distanceBuffer(data, lengthData), function() {
-                                    utils.log('Written: '+binfilenameLength);
-                                    callback();
-                                });
+                            fs.writefileraw(undefined, binfilename, querytable.distanceBuffer(data, lengthData), function() {
+                                utils.log('Written: '+binfilenameLength);
+                                callback();
                             });
                         });
-                    }
+                    });
+                }
             });
         }, threads);
     queue.drain = function() {
